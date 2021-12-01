@@ -4,6 +4,8 @@
 
 <!-- livebook:{"livebook_object":"cell_input","name":"input","type":"text","value":"199 200 208 210 200 207 240 268 260 263"} -->
 
+<!-- livebook:{"reevaluate_automatically":true} -->
+
 ```elixir
 parse_input = fn input ->
   input |> String.trim() |> String.split() |> Enum.map(&String.to_integer/1)
@@ -11,6 +13,8 @@ end
 
 [i | input] = IO.gets("input: ") |> parse_input.()
 ```
+
+<!-- livebook:{"reevaluate_automatically":true} -->
 
 ```elixir
 Enum.zip_reduce(input, [i | input], 0, fn
@@ -23,9 +27,13 @@ end)
 
 <!-- livebook:{"livebook_object":"cell_input","name":"input","type":"text","value":"199 200 208 210 200 207 240 269 260 263"} -->
 
+<!-- livebook:{"reevaluate_automatically":true} -->
+
 ```elixir
 input = IO.gets("input: ") |> parse_input.()
 ```
+
+<!-- livebook:{"reevaluate_automatically":true} -->
 
 ```elixir
 chunk_fun = fn
@@ -46,6 +54,8 @@ end
 
 [tri_sum | tri_sums] = Enum.chunk_while(input, [], chunk_fun, after_fun)
 ```
+
+<!-- livebook:{"reevaluate_automatically":true} -->
 
 ```elixir
 Enum.zip_reduce(tri_sums, [tri_sum | tri_sums], 0, fn
