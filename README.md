@@ -1,6 +1,6 @@
 # Advent of Code 
 
-My attempt to do [Advent of Code 2021](https://adventofcode.com/2021) in [Elixir](https://elixir-lang.org) using [Livebook](livebook.dev)
+My attempt to do [Advent of Code 2021](https://adventofcode.com/2021) in [Elixir](https://elixir-lang.org) using [Livebook](https://livebook.dev)
 
 <img width="753" alt="Screen Shot 2021-12-01 at 07 18 08" src="https://user-images.githubusercontent.com/3350917/144182218-158a14c0-2c46-4ceb-983a-e14fc9b430bd.png">
 
