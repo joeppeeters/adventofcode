@@ -62,9 +62,9 @@ defmodule Submarine2 do
     x * y
   end
 
-  defp move({:forward, unit}, {a, x, y}), do: {a, x + unit, y + a * unit}
-  defp move({:down, unit}, {a, x, y}), do: {a + unit, x, y}
-  defp move({:up, unit}, {a, x, y}), do: {a - unit, x, y}
+  def move({:forward, unit}, {a, x, y}), do: {a, x + unit, y + a * unit}
+  def move({:down, unit}, {a, x, y}), do: {a + unit, x, y}
+  def move({:up, unit}, {a, x, y}), do: {a - unit, x, y}
 end
 ```
 
@@ -119,4 +119,32 @@ defmodule Test do
 end
 
 ExUnit.run()
+```
+
+## Animate descent
+
+```elixir
+Mix.install([:vega_lite, :kino])
+
+alias VegaLite, as: Vl
+```
+
+```elixir
+widget =
+  Vl.new(width: 400, height: 400)
+  |> Vl.mark(:line)
+  |> Vl.encode_field(:x, "position", type: :quantitative)
+  |> Vl.encode_field(:y, "depth", type: :quantitative)
+  |> Kino.VegaLite.new()
+  |> tap(&Kino.render/1)
+
+Enum.reduce(input, {0, 0, 0}, fn instr, pos ->
+  {_, x, y} = pos = Submarine2.move(instr, pos)
+
+  point = %{"position" => x, "depth" => -y}
+  Kino.VegaLite.push(widget, point, window: 2000)
+  Process.sleep(25)
+
+  pos
+end)
 ```
