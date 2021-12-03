@@ -94,6 +94,21 @@ end
 QuickSolve.solve(input)
 ```
 
+```elixir
+defmodule ChunkSolve do
+  def solve(input) do
+    input
+    |> Enum.chunk_every(3, 1, :discard)
+    |> Enum.map(&Enum.sum/1)
+    |> DepthMeasurements.count_increments()
+  end
+end
+```
+
+```elixir
+ChunkSolve.solve(input)
+```
+
 ## Tests
 
 <!-- livebook:{"reevaluate_automatically":true} -->
@@ -119,6 +134,10 @@ defmodule Tests do
   test "quick solve", %{input: input} do
     assert QuickSolve.solve(input) == 5
   end
+
+  test "chunk solve", %{input: input} do
+    assert ChunkSolve.solve(input) == 5
+  end
 end
 
 ExUnit.run()
@@ -138,7 +157,8 @@ Benchee.run(%{
   "SlidingWindow" => fn ->
     SlidingWindow.trisums(input)
     |> DepthMeasurements.count_increments()
-  end
+  end,
+  "ChunkSolve" => fn -> ChunkSolve.solve(input) end
 })
 
 :ok
