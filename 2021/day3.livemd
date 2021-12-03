@@ -18,9 +18,19 @@ defmodule Setup do
     |> String.split("\n", trim: true)
     |> Enum.map(&String.codepoints/1)
   end
+
+  def parse_sorted(report) do
+    report
+    |> String.split("\n", trim: true)
+    |> Enum.sort()
+    |> Enum.map(&String.codepoints/1)
+  end
 end
 
-input = Setup.get_input("input") |> Setup.parse_input()
+report = Setup.get_input("input")
+
+input = report |> Setup.parse_input()
+sorted_input = report |> Setup.parse_sorted()
 
 :ok
 ```
@@ -112,6 +122,53 @@ Diagnostics.power_consumption(input)
 Diagnostics.life_support_rating(input)
 ```
 
+## SortedSolve
+
+```elixir
+defmodule SortedSolver do
+  def solve(input) do
+    oxygen(input) * co2(input)
+  end
+
+  def oxygen(input) do
+    rating(input, &most_commons/1)
+  end
+
+  def co2(input) do
+    rating(input, &least_commons/1)
+  end
+
+  defp rating(input, fun) do
+    width = input |> hd() |> length()
+
+    [rating] =
+      Enum.reduce_while(0..(width - 1), input, fn
+        _, [readings] ->
+          {:halt, [readings]}
+
+        i, readings ->
+          {:cont, readings |> take_while_at(i) |> fun.()}
+      end)
+
+    rating
+    |> Enum.join()
+    |> String.to_integer(2)
+  end
+
+  defp most_commons({zeros, ones}) when length(ones) >= length(zeros), do: ones
+  defp most_commons({zeros, _}), do: zeros
+
+  defp least_commons({zeros, ones}) when length(ones) >= length(zeros), do: zeros
+  defp least_commons({_, ones}), do: ones
+
+  def take_while_at(input, index) do
+    Enum.split_while(input, &(Enum.at(&1, index) == "0"))
+  end
+end
+
+SortedSolver.solve(sorted_input)
+```
+
 ## Tetst
 
 <!-- livebook:{"reevaluate_automatically":true} -->
@@ -176,4 +233,17 @@ defmodule Test do
 end
 
 ExUnit.run()
+```
+
+```elixir
+Mix.install([:benchee])
+```
+
+```elixir
+Benchee.run(%{
+  "Diagnostics" => fn -> Diagnostics.life_support_rating(input) end,
+  "SortedSolve" => fn -> SortedSolver.solve(sorted_input) end
+})
+
+:ok
 ```
