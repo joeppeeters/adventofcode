@@ -1,0 +1,74 @@
+# --- Day 6: Lanternfish ---
+
+## Setup
+
+```elixir
+defmodule Setup do
+  def get_input(prompt) do
+    case IO.gets(prompt) do
+      :eof -> ""
+      line -> line <> get_input(prompt)
+    end
+  end
+end
+```
+
+<!-- livebook:{"livebook_object":"cell_input","name":"Input","type":"textarea","value":"1,1,1,1,2,1,1,4,1,4,3,1,1,1,1,1,1,1,1,4,1,3,1,1,1,5,1,3,1,4,1,2,1,1,5,1,1,1,1,1,1,1,1,1,1,3,4,1,5,1,1,1,1,1,1,1,1,1,3,1,4,1,1,1,1,3,5,1,1,2,1,1,1,1,4,4,1,1,1,4,1,1,4,2,4,4,5,1,1,1,1,2,3,1,1,4,1,5,1,1,1,3,1,1,1,1,5,5,1,2,2,2,2,1,1,2,1,1,1,1,1,3,1,1,1,2,3,1,5,1,1,1,2,2,1,1,1,1,1,3,2,1,1,1,4,3,1,1,4,1,5,4,1,4,1,1,1,1,1,1,1,1,1,1,2,2,4,5,1,1,1,1,5,4,1,3,1,1,1,1,4,3,3,3,1,2,3,1,1,1,1,1,1,1,1,2,1,1,1,5,1,3,1,4,3,1,3,1,5,1,1,1,1,3,1,5,1,2,4,1,1,4,1,4,4,2,1,2,1,3,3,1,4,4,1,1,3,4,1,1,1,2,5,2,5,1,1,1,4,1,1,1,1,1,1,3,1,5,1,2,1,1,1,1,1,4,4,1,1,1,5,1,1,5,1,2,1,5,1,1,1,1,1,1,1,1,1,1,1,1,3,2,4,1,1,2,1,1,3,2"} -->
+
+```elixir
+defmodule LanternFish do
+  def part1(input) do
+    Enum.reduce(1..80, input, fn _i, fishes ->
+      fishes
+      |> Enum.map(fn
+        0 -> 6
+        n -> n - 1
+      end)
+      |> Enum.concat(List.duplicate(8, Enum.count(fishes, &(&1 == 0))))
+
+      # |> IO.inspect(label: "Day #{i}")
+    end)
+    |> Enum.count()
+  end
+
+  def part2(input) do
+    fish_per_evolution =
+      Map.new(0..8, &{&1, 0})
+      |> Map.merge(Enum.frequencies(input))
+
+    evolution_steps = 256
+
+    Enum.reduce(1..evolution_steps, fish_per_evolution, fn
+      _i, fish ->
+        %{
+          fish
+          | 0 => fish[1],
+            1 => fish[2],
+            2 => fish[3],
+            3 => fish[4],
+            4 => fish[5],
+            5 => fish[6],
+            6 => fish[7] + fish[0],
+            7 => fish[8],
+            8 => fish[0]
+        }
+    end)
+    |> Map.values()
+    |> Enum.sum()
+  end
+end
+```
+
+```elixir
+Setup.get_input("Input")
+|> String.split(["\n", ","], trim: true)
+|> Enum.map(&String.to_integer/1)
+|> LanternFish.part1()
+```
+
+```elixir
+Setup.get_input("Input")
+|> String.split(["\n", ","], trim: true)
+|> Enum.map(&String.to_integer/1)
+|> LanternFish.part2()
+```
