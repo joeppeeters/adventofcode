@@ -36,25 +36,36 @@ end)
 ```
 
 ```elixir
-Setup.get_input("Input")
-|> String.split("\n", trim: true)
-|> Enum.map(&String.split(&1, [",", " -> "]))
-|> Enum.map(fn [x1, y1, x2, y2] ->
-  {
-    {String.to_integer(x1), String.to_integer(y1)},
-    {String.to_integer(x2), String.to_integer(y2)}
-  }
-end)
-|> Enum.flat_map(fn
-  {{x1, y1}, {x2, y2}} when x1 == x2 or y1 == y2 ->
-    for x <- x1..x2, y <- y1..y2, do: {x, y}
+input =
+  Setup.get_input("Input")
+  |> String.split("\n", trim: true)
+  |> Enum.map(&String.split(&1, [",", " -> "]))
+  |> Enum.map(fn [x1, y1, x2, y2] ->
+    {
+      {String.to_integer(x1), String.to_integer(y1)},
+      {String.to_integer(x2), String.to_integer(y2)}
+    }
+  end)
 
-  {{x1, y1}, {x2, y2}} ->
-    step = abs(x2 - x1)
-    {dx, dy} = {div(x2 - x1, step), div(y2 - y1, step)}
+defmodule Part2 do
+  def go(input) do
+    input
+    |> Enum.flat_map(fn
+      {{x1, y1}, {x2, y2}} when x1 == x2 or y1 == y2 ->
+        for x <- x1..x2, y <- y1..y2, do: {x, y}
 
-    for i <- 0..step, do: {x1 + i * dx, y1 + i * dy}
-end)
-|> Enum.frequencies()
-|> Enum.count(fn {_, count} -> count > 1 end)
+      {{x1, y1}, {x2, y2}} ->
+        step = abs(x2 - x1)
+        {dx, dy} = {div(x2 - x1, step), div(y2 - y1, step)}
+
+        for i <- 0..step, do: {x1 + i * dx, y1 + i * dy}
+    end)
+    |> Enum.frequencies()
+    |> Enum.count(fn {_, count} -> count > 1 end)
+  end
+end
+```
+
+```elixir
+Part2.go(input)
 ```
