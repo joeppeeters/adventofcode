@@ -1,4 +1,4 @@
-# Untitled notebook
+# --- Day 7: The Treachery of Whales ---
 
 ## Part1
 
@@ -44,31 +44,28 @@ result =
 Enum.min(result)
 ```
 
+## Part2
+
 ```elixir
 input =
   Setup.get_input("input")
   |> String.split(["\n", ","], trim: true)
   |> Enum.map(&String.to_integer/1)
 
-min = Enum.min(input)
-max = Enum.max(input)
+defmodule Part2 do
+  def go(input) do
+    min = Enum.min(input)
+    max = Enum.max(input)
 
-tensor = Nx.tensor(input)
-
-result =
-  for x <- min..max do
-    tensor
-    |> Nx.subtract(x)
-    |> Nx.abs()
-    |> then(fn t ->
-      t
-      |> Nx.add(1)
-      |> Nx.multiply(t)
+    min..max
+    |> Enum.map(fn x ->
+      input
+      |> Enum.map(&Enum.sum(0..abs(&1 - x)))
+      |> Enum.sum()
     end)
-    |> Nx.divide(2)
-    |> Nx.sum()
-    |> Nx.to_number()
+    |> Enum.min()
   end
+end
 
-Enum.min(result)
+Part2.go(input)
 ```
