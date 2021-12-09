@@ -52,13 +52,13 @@ defmodule LavaTubes do
   def explore(point, map, basin \\ MapSet.new())
 
   def explore({x, y} = point, map, basin) do
-    if (val = map[point]) && point not in basin do
+    if map[point] && point not in basin do
       [{x, y + 1}, {x, y - 1}, {x + 1, y}, {x - 1, y}]
-      |> Enum.reduce(MapSet.put(basin, point), fn {x, y}, basin ->
-        next = map[{x, y}]
+      |> Enum.reduce(MapSet.put(basin, point), fn point, basin ->
+        next = map[point]
 
-        if next < 9 and next > val do
-          MapSet.union(basin, explore({x, y}, map, basin))
+        if next < 9 do
+          MapSet.union(basin, explore(point, map, basin))
         else
           basin
         end
@@ -91,4 +91,27 @@ map
 |> Enum.sort(:desc)
 |> Enum.take(3)
 |> Enum.product()
+```
+
+## ASCII MAP
+
+```elixir
+Setup.get_input("input")
+|> String.split("\n", trim: true)
+|> then(fn [l | ls] ->
+  border = String.duplicate("9", String.length(l))
+  [border, l | ls] ++ [border]
+end)
+|> Enum.map(fn line ->
+  line
+  |> then(&("9" <> &1 <> "9"))
+  |> String.split("", trim: true)
+  |> Enum.map(fn
+    "9" -> "#"
+    _ -> " "
+  end)
+  |> Enum.join()
+end)
+|> Enum.join("\n")
+|> IO.puts()
 ```
