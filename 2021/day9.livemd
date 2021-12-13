@@ -1,4 +1,4 @@
-# Untitled notebook
+# --- Day 9: Smoke Basin ---
 
 ## Setup
 
