@@ -1,0 +1,109 @@
+# --- Day 11: Dumbo Octopus ---
+
+## Setup
+
+<!-- livebook:{"livebook_object":"cell_input","name":"input","type":"textarea","value":"4525436417\n1851242553\n5421435521\n8431325447\n4517438332\n3521262111\n3331541734\n4351836641\n2753881442\n7717616863"} -->
+
+```elixir
+defmodule Setup do
+  def get_input(prompt) do
+    case IO.gets(prompt) do
+      :eof -> ""
+      line -> line <> get_input(prompt)
+    end
+  end
+end
+```
+
+```elixir
+defmodule Setup do
+  def get_input(prompt) do
+    case IO.gets(prompt) do
+      :eof -> ""
+      line -> line <> get_input(prompt)
+    end
+  end
+
+  def parse_input(binary) do
+    binary
+    |> String.split("\n", trim: true)
+    |> Enum.map(fn line ->
+      line
+      |> String.split("", trim: true)
+      |> Enum.map(&String.to_integer/1)
+    end)
+    |> then(fn input ->
+      {height, width} = {length(input), length(hd(input))}
+
+      for x <- 0..(height - 1), y <- 0..(width - 1), into: %{} do
+        {{x, y}, get_in(input, [Access.at(x), Access.at(y)])}
+      end
+    end)
+  end
+end
+```
+
+```elixir
+defmodule DumboOcto do
+  def step(map) do
+    map = map |> Map.new(fn {p, e} -> {p, e + 1} end)
+
+    for {point, 10} <- map, reduce: map do
+      map -> flash(point, map)
+    end
+  end
+
+  def flash(point, map) do
+    if energy = map[point] do
+      case energy do
+        0 ->
+          map
+
+        n when n >= 9 ->
+          map
+          |> Map.put(point, 0)
+          |> then(fn map ->
+            Enum.reduce(adjacent(point), map, &flash/2)
+          end)
+
+        n ->
+          Map.put(map, point, n + 1)
+      end
+    else
+      map
+    end
+  end
+
+  defp adjacent({x, y}) do
+    for x2 <- (x - 1)..(x + 1), y2 when {x2, y2} != {x, y} <- (y - 1)..(y + 1), do: {x2, y2}
+  end
+end
+```
+
+```elixir
+Setup.get_input("input")
+|> Setup.parse_input()
+|> then(fn map ->
+  Enum.reduce(1..100, {0, map}, fn _, {score, map} ->
+    map
+    |> DumboOcto.step()
+    |> then(fn map ->
+      {
+        Enum.count(map, fn {_, v} -> v == 0 end) + score,
+        map
+      }
+    end)
+  end)
+end)
+```
+
+```elixir
+Stream.iterate(0, &(&1 + 1))
+|> Enum.reduce_while(map, fn step, map ->
+  if map |> Map.values() |> Enum.all?(&(&1 == 0)) do
+    {:halt, step}
+  else
+    {:cont, DumboOcto.step(map)}
+  end
+end)
+```
