@@ -1,0 +1,81 @@
+# --- Day 12: Passage Pathing ---
+
+## Setup
+
+<!-- livebook:{"livebook_object":"cell_input","name":"input","type":"textarea","value":"ln-nr\nln-wy\nfl-XI\nqc-start\nqq-wy\nqc-ln\nZD-nr\nqc-YN\nXI-wy\nln-qq\nln-XI\nYN-start\nqq-XI\nnr-XI\nstart-qq\nqq-qc\nend-XI\nqq-YN\nln-YN\nend-wy\nqc-nr\nend-nr"} -->
+
+```elixir
+defmodule Setup do
+  def get_input(prompt) do
+    case IO.gets(prompt) do
+      :eof -> ""
+      line -> line <> get_input(prompt)
+    end
+  end
+end
+```
+
+```elixir
+map =
+  Setup.get_input("input")
+  |> String.split(["-", "\n"], trim: true)
+  |> then(fn string -> string ++ Enum.reverse(string) end)
+  |> Enum.chunk_every(2)
+  |> Enum.reduce(%{}, fn [a, b], map ->
+    Map.update(map, a, [b], &[b | &1])
+  end)
+```
+
+```elixir
+defmodule Submarine do
+  def cavewalks(map, at \\ "start", had_extra_visit? \\ true)
+
+  def cavewalks(_map, "end", _had_extra_visit?) do
+    [["end"]]
+  end
+
+  def cavewalks(map, at, had_extra_visit?) do
+    new_map = drop_small_cave(map, at)
+
+    map
+    |> Map.get(at)
+    |> Enum.reduce([], fn cave, walks ->
+      if had_extra_visit? do
+        walks ++ cavewalks(new_map, cave, true)
+      else
+        if small_cave?(at) and at != "start" do
+          walks ++ cavewalks(new_map, cave, false) ++ cavewalks(map, cave, true)
+        else
+          walks ++ cavewalks(new_map, cave, false)
+        end
+      end
+    end)
+    |> Enum.uniq()
+    |> Enum.map(&[at | &1])
+  end
+
+  defp small_cave?(at), do: at == String.downcase(at)
+
+  defp drop_small_cave(map, at) do
+    if small_cave?(at) do
+      for {cave, connections} when cave != at <- map, into: %{} do
+        {cave, Enum.reject(connections, &(&1 == at))}
+      end
+    else
+      map
+    end
+  end
+end
+```
+
+## Part1
+
+```elixir
+Submarine.cavewalks(map) |> Enum.count()
+```
+
+## Part2
+
+```elixir
+Submarine.cavewalks(map, "start", false) |> Enum.count()
+```
