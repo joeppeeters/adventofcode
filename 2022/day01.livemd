@@ -1,0 +1,42 @@
+# Day 1: Calorie Counting
+
+```elixir
+Mix.install([:kino, :req])
+```
+
+## Parsing
+
+```elixir
+input = Kino.Input.textarea("input")
+```
+
+```elixir
+snacks =
+  input
+  |> Kino.Input.read()
+  |> String.split(["\n\n"])
+  |> Enum.map(fn elf ->
+    elf
+    |> String.split("\n")
+    |> Enum.reduce(0, &(String.to_integer(&1) + &2))
+  end)
+```
+
+<!-- livebook:{"branch_parent_index":0} -->
+
+## Part 1
+
+```elixir
+Enum.max(snacks)
+```
+
+<!-- livebook:{"branch_parent_index":0} -->
+
+## Part 2
+
+```elixir
+snacks
+|> Enum.sort(:desc)
+|> Enum.take(3)
+|> Enum.sum()
+```
