@@ -1,0 +1,53 @@
+# Day 2: Rock Paper Scissors
+
+```elixir
+Mix.install([:kino])
+```
+
+## Input
+
+```elixir
+input = Kino.Input.textarea("Input")
+```
+
+<!-- livebook:{"branch_parent_index":0} -->
+
+## Part 1
+
+```elixir
+input
+|> Kino.Input.read()
+|> String.split("\n")
+|> Enum.reduce(0, fn
+  "A X", acc -> acc + 3 + 1
+  "A Y", acc -> acc + 6 + 2
+  "A Z", acc -> acc + 0 + 3
+  "B X", acc -> acc + 0 + 1
+  "B Y", acc -> acc + 3 + 2
+  "B Z", acc -> acc + 6 + 3
+  "C X", acc -> acc + 6 + 1
+  "C Y", acc -> acc + 0 + 2
+  "C Z", acc -> acc + 3 + 3
+end)
+```
+
+<!-- livebook:{"branch_parent_index":0} -->
+
+## Part 2
+
+```elixir
+input
+|> Kino.Input.read()
+|> String.split("\n")
+|> Enum.reduce(0, fn
+  "A X", acc -> acc + 0 + 3
+  "A Y", acc -> acc + 3 + 1
+  "A Z", acc -> acc + 6 + 2
+  "B X", acc -> acc + 0 + 1
+  "B Y", acc -> acc + 3 + 2
+  "B Z", acc -> acc + 6 + 3
+  "C X", acc -> acc + 0 + 2
+  "C Y", acc -> acc + 3 + 3
+  "C Z", acc -> acc + 6 + 1
+end)
+```
