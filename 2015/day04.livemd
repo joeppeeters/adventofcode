@@ -1,0 +1,43 @@
+# Day 4: The Ideal Stocking Stuffer
+
+```elixir
+Mix.install([:kino])
+```
+
+## Section
+
+```elixir
+input = Kino.Input.text("Input")
+```
+
+```elixir
+secret = Kino.Input.read(input)
+```
+
+## Part 1
+
+```elixir
+Enum.reduce_while(0..999_999, 0, fn i, _ ->
+  case :crypto.hash(:md5, secret <> "#{i}") |> Base.encode16() do
+    "00000" <> _rest ->
+      {:halt, i}
+
+    _ ->
+      {:cont, 0}
+  end
+end)
+```
+
+## Part 2
+
+```elixir
+Enum.reduce_while(0..9_999_999, 0, fn i, _ ->
+  case :crypto.hash(:md5, secret <> "#{i}") |> Base.encode16() do
+    "000000" <> _rest ->
+      {:halt, i}
+
+    _ ->
+      {:cont, 0}
+  end
+end)
+```

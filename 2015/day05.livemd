@@ -1,0 +1,74 @@
+# Day 5: Doesn't He Have Intern-Elves For This?
+
+```elixir
+Mix.install([:kino])
+```
+
+## Section
+
+```elixir
+input = Kino.Input.textarea("input")
+```
+
+```elixir
+defmodule NiceString do
+  def has_vowels?(graphemes) do
+    Enum.count_until(graphemes, &(&1 in ~w(a e i o u)), 3) == 3
+  end
+
+  def has_doubles?([_]), do: false
+  def has_doubles?([a, a | _graphemes]), do: true
+  def has_doubles?([_ | graphemes]), do: has_doubles?(graphemes)
+
+  def no_pairs?([_]), do: true
+
+  def no_pairs?([a, b | _graphemes])
+      when [a, b] in [["a", "b"], ["c", "d"], ["p", "q"], ["x", "y"]],
+      do: false
+
+  def no_pairs?([_ | graphemes]), do: no_pairs?(graphemes)
+
+  def has_pairs?(string) when bit_size(string) == 8, do: false
+
+  def has_pairs?(string) do
+    {pair, rest} = String.split_at(string, 2)
+
+    if rest =~ pair, do: true, else: has_pairs?(String.slice(string, 1..-1//1))
+  end
+
+  def triple?(string) when is_binary(string), do: triple?(String.graphemes(string))
+  def triple?(graphemes) when length(graphemes) < 3, do: false
+  def triple?([a, _, a | _graphemes]), do: true
+  def triple?([_ | graphemes]), do: triple?(graphemes)
+end
+```
+
+## Part 1
+
+```elixir
+input
+|> Kino.Input.read()
+|> String.split("\n")
+|> Enum.filter(fn string ->
+  string
+  |> String.graphemes()
+  |> then(fn graphemes ->
+    NiceString.has_vowels?(graphemes) and
+      NiceString.has_doubles?(graphemes) and
+      NiceString.no_pairs?(graphemes)
+  end)
+end)
+|> Enum.count()
+```
+
+## Part 2
+
+```elixir
+input
+|> Kino.Input.read()
+|> String.split("\n")
+|> Enum.filter(fn string ->
+  NiceString.has_pairs?(string) and NiceString.triple?(string)
+end)
+|> Enum.count()
+```

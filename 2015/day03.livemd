@@ -1,0 +1,68 @@
+# Day 3: Perfectly Spherical Houses in a Vacuum
+
+```elixir
+Mix.install([:kino])
+```
+
+## Input
+
+```elixir
+input = Kino.Input.textarea("Input")
+```
+
+```elixir
+update_pos = fn
+  {x, y}, ">" -> {x + 1, y}
+  {x, y}, "<" -> {x - 1, y}
+  {x, y}, "^" -> {x, y + 1}
+  {x, y}, "v" -> {x, y - 1}
+end
+
+update_trace = fn trace, pos ->
+  Map.update(trace, pos, 1, &(&1 + 1))
+end
+
+instructions =
+  input
+  |> Kino.Input.read()
+  |> String.graphemes()
+```
+
+<!-- livebook:{"branch_parent_index":0} -->
+
+## Part 1
+
+```elixir
+instructions
+|> Enum.reduce({{0, 0}, %{{0, 0} => 1}}, fn
+  d, {pos, trace} ->
+    pos
+    |> update_pos.(d)
+    |> then(&{&1, update_trace.(trace, &1)})
+end)
+|> elem(1)
+|> Enum.count()
+```
+
+<!-- livebook:{"branch_parent_index":0} -->
+
+## Part 2
+
+```elixir
+instructions
+|> Enum.chunk_every(2)
+|> Enum.reduce({{0, 0}, {0, 0}, %{{0, 0} => 1}}, fn
+  [s, r], {s0, r0, trace} ->
+    s1 = update_pos.(s0, s)
+    r1 = update_pos.(r0, r)
+
+    trace =
+      trace
+      |> update_trace.(s1)
+      |> update_trace.(r1)
+
+    {s1, r1, trace}
+end)
+|> elem(2)
+|> Enum.count()
+```

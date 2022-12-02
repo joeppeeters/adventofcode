@@ -1,0 +1,49 @@
+# Day 2: I Was Told There Would Be No Math notebook
+
+```elixir
+Mix.install([:kino])
+```
+
+## Input
+
+```elixir
+input = Kino.Input.textarea("Input")
+```
+
+```elixir
+sizes =
+  input
+  |> Kino.Input.read()
+  |> String.split(["\n", "x"])
+  |> Enum.map(&String.to_integer/1)
+  |> Enum.chunk_every(3)
+```
+
+<!-- livebook:{"branch_parent_index":0} -->
+
+## Part 1
+
+```elixir
+sizes
+|> Enum.map(fn [l, w, h] ->
+  Enum.min([l * w, w * h, h * l]) + 2 * l * w + 2 * w * h + 2 * h * l
+end)
+|> Enum.sum()
+```
+
+<!-- livebook:{"branch_parent_index":0} -->
+
+## Part 2
+
+```elixir
+sizes
+|> Enum.map(fn size ->
+  size
+  |> Enum.sort()
+  |> Enum.take(2)
+  |> Enum.sum()
+  |> Kernel.*(2)
+  |> Kernel.+(Enum.product(size))
+end)
+|> Enum.sum()
+```
