@@ -1,0 +1,53 @@
+# Day 3: Rucksack Reorganization
+
+```elixir
+Mix.install([:kino])
+```
+
+## Section
+
+```elixir
+input = Kino.Input.textarea("Input")
+```
+
+```elixir
+dict =
+  "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+  |> String.graphemes()
+  |> Enum.with_index(fn el, i -> {el, i + 1} end)
+  |> Map.new()
+
+rucksacks =
+  input
+  |> Kino.Input.read()
+  |> String.split("\n")
+  |> Enum.map(&String.graphemes/1)
+```
+
+## Part 1
+
+```elixir
+rucksacks
+|> Enum.reduce(0, fn rucksack, sum ->
+  rucksack
+  |> Enum.split(rucksack |> length |> div(2))
+  |> then(fn {left, right} ->
+    MapSet.intersection(MapSet.new(left), MapSet.new(right))
+  end)
+  |> Enum.at(0)
+  |> then(fn badge ->
+    sum + Map.get(dict, badge)
+  end)
+end)
+```
+
+## Part 2
+
+```elixir
+rucksacks
+|> Enum.map(&MapSet.new/1)
+|> Enum.chunk_every(3)
+|> Enum.reduce(0, fn [a, b, c], sum ->
+  sum + Map.get(dict, Enum.at(a |> MapSet.intersection(b) |> MapSet.intersection(c), 0))
+end)
+```
