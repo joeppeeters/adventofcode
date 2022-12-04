@@ -1,0 +1,37 @@
+# Day 4: Camp Cleanup
+
+```elixir
+Mix.install([:kino])
+```
+
+## Section
+
+```elixir
+input = Kino.Input.textarea("Input")
+```
+
+```elixir
+ranges =
+  input
+  |> Kino.Input.read()
+  |> String.split(["\n", ",", "-"])
+  |> Enum.map(&String.to_integer/1)
+  |> Enum.chunk_every(4)
+  |> Enum.map(fn [a, b, c, d] -> {a..b, c..d} end)
+```
+
+## Part 1
+
+```elixir
+subset? = fn %Range{first: a, last: b}, %Range{first: c, last: d} ->
+  (c >= a and c <= b and d >= a and d <= b) or (a >= c and a <= d and b >= c and b <= d)
+end
+
+Enum.count(ranges, fn {a, b} -> subset?.(a, b) end)
+```
+
+## Section
+
+```elixir
+Enum.count(ranges, fn {a, b} -> not Range.disjoint?(a, b) end)
+```
