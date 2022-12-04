@@ -12,8 +12,7 @@ input = Kino.Input.textarea("Input")
 
 ```elixir
 dict =
-  "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-  |> String.graphemes()
+  for(c <- Enum.concat(?a..?z, ?A..?Z), do: <<c>>)
   |> Enum.with_index(fn el, i -> {el, i + 1} end)
   |> Map.new()
 
