@@ -1,0 +1,72 @@
+# Day 5: Supply Stacks
+
+```elixir
+Mix.install([:kino])
+```
+
+## Section
+
+```elixir
+input = Kino.Input.textarea("Input")
+```
+
+```elixir
+[crates, instructions] =
+  input
+  |> Kino.Input.read()
+  |> String.split("\n\n")
+
+crates =
+  crates
+  |> String.split("\n")
+  |> Enum.drop(-1)
+  |> Enum.map(fn line ->
+    line
+    |> String.graphemes()
+    |> Enum.chunk_every(4)
+    |> Enum.map(&Enum.at(&1, 1))
+  end)
+  |> Enum.zip_with(& &1)
+  |> Enum.map(&Enum.reject(&1, fn c -> c == " " end))
+  |> Enum.with_index(1)
+  |> Map.new(fn {v, k} -> {k, v} end)
+
+instructions =
+  instructions
+  |> String.split(["move ", " from ", " to ", "\n"], trim: true)
+  |> Enum.map(&String.to_integer/1)
+  |> Enum.chunk_every(3)
+
+defmodule Crane do
+  def lift([n, from, to], crates, model \\ 9000) do
+    crates
+    |> Map.get_and_update(from, &Enum.split(&1, n))
+    |> then(fn {load, crates} ->
+      case model do
+        9000 -> Map.update!(crates, to, &(Enum.reverse(load) ++ &1))
+        9001 -> Map.update!(crates, to, &(load ++ &1))
+      end
+    end)
+  end
+end
+```
+
+## Part 1
+
+```elixir
+instructions
+|> Enum.reduce(crates, &Crane.lift/2)
+|> Map.values()
+|> Enum.map(&hd/1)
+|> Enum.join()
+```
+
+## Part 2
+
+```elixir
+instructions
+|> Enum.reduce(crates, &Crane.lift(&1, &2, 9001))
+|> Map.values()
+|> Enum.map(&hd/1)
+|> Enum.join()
+```
