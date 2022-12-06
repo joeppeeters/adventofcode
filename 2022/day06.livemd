@@ -1,0 +1,44 @@
+# Day 6: Tuning Trouble
+
+```elixir
+Mix.install([:kino])
+```
+
+## Section
+
+```elixir
+input = Kino.Input.textarea("input")
+```
+
+```elixir
+defmodule Comms do
+  def marker_at(stream, marker_length) do
+    stream
+    |> Stream.chunk_every(marker_length, 1)
+    |> Enum.reduce_while(marker_length, fn marker, acc ->
+      if marker |> Enum.uniq() |> length() == marker_length do
+        {:halt, acc}
+      else
+        {:cont, acc + 1}
+      end
+    end)
+  end
+end
+
+stream =
+  input
+  |> Kino.Input.read()
+  |> String.to_charlist()
+```
+
+## Part1
+
+```elixir
+Comms.marker_at(stream, 4)
+```
+
+## Part 2
+
+```elixir
+Comms.marker_at(stream, 14)
+```
