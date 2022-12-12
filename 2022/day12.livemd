@@ -50,31 +50,7 @@ top =
   end)
 
 defmodule BFS do
-  def search1(grid, path, seen) do
-    {x, y} = current = hd(path)
-    h = grid[current]
-
-    seen = Map.put(seen, current, path)
-
-    grid
-    |> Map.take([{x + 1, y}, {x - 1, y}, {x, y + 1}, {x, y - 1}])
-    |> Enum.reject(fn {pos, height} ->
-      # too high, or known shorter path
-      height > h + 1 or (seen[pos] && length(seen[pos]) <= length(path) + 1)
-    end)
-    |> case do
-      [] ->
-        # no new nodes the explore, return known shortest paths 
-        seen
-
-      list ->
-        Enum.reduce(list, seen, fn {pos, _}, seen ->
-          search1(grid, [pos | path], seen)
-        end)
-    end
-  end
-
-  def search2(grid, path, seen) do
+  def search(grid, path, seen, from \\ -1) do
     {x, y} = current = hd(path)
     h = grid[current]
 
@@ -93,11 +69,11 @@ defmodule BFS do
 
       list ->
         Enum.reduce(list, seen, fn
-          {pos, 1}, seen ->
-            search2(grid, [pos], seen)
+          {pos, ^from}, seen ->
+            search(grid, [pos], seen, from)
 
           {pos, _}, seen ->
-            search2(grid, [pos | path], seen)
+            search(grid, [pos | path], seen, from)
         end)
     end
   end
@@ -107,11 +83,11 @@ end
 ## Part 1
 
 ```elixir
-BFS.search1(grid, [start], %{})[top] |> Enum.count() |> Kernel.-(1)
+BFS.search(grid, [start], %{})[top] |> Enum.count() |> Kernel.-(1)
 ```
 
 ## Part 2
 
 ```elixir
-BFS.search2(grid, [start], %{})[top] |> Enum.count() |> Kernel.-(1)
+BFS.search(grid, [start], %{}, 1)[top] |> Enum.count() |> Kernel.-(1)
 ```
