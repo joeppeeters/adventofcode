@@ -1,0 +1,87 @@
+# Day 7: No Space Left On Device
+
+```elixir
+Mix.install([:kino])
+```
+
+## Section
+
+```elixir
+input = Kino.Input.textarea("input")
+```
+
+```elixir
+commands =
+  input
+  |> Kino.Input.read()
+  |> String.split("$", trim: true)
+  |> Enum.map(fn cmd ->
+    String.split(cmd, [" ", "\n"], trim: true)
+  end)
+
+defmodule FS do
+  def build([], _path), do: []
+
+  def build([["cd", ".."] | commands], [_ | path]) do
+    build(commands, path)
+  end
+
+  def build([["cd", "/"] | commands], path) do
+    build(commands, path)
+  end
+
+  def build([["cd", dir] | commands], path) do
+    build(commands, [dir | path])
+  end
+
+  def build([["ls" | ls] | commands], path) do
+    Enum.chunk_every(ls, 2)
+    |> Enum.reject(fn [dir, _] -> dir == "dir" end)
+    |> Enum.reduce(0, fn [size, _file], acc ->
+      acc + String.to_integer(size)
+    end)
+    |> then(&[{path, &1} | build(commands, path)])
+  end
+
+  def calc_sizes([]), do: []
+
+  def calc_sizes([path | paths]) do
+    paths
+    |> Enum.filter(fn {p, _s} -> List.starts_with?(p, elem(path, 0)) end)
+    |> then(fn subdirs ->
+      [
+        {elem(path, 0),
+         Enum.reduce(subdirs, elem(path, 1), fn
+           {_, s}, acc ->
+             s + acc
+         end)}
+        | calc_sizes(paths)
+      ]
+    end)
+  end
+end
+
+FS.build(commands, [])
+|> Enum.sort_by(fn {path, _size} -> length(path) end)
+|> Enum.map(fn {k, v} -> {Enum.reverse(k), v} end)
+|> FS.calc_sizes()
+|> Enum.filter(fn {_, s} -> s <= 100_000 end)
+|> Enum.map(&elem(&1, 1))
+|> Enum.sum()
+```
+
+```elixir
+FS.build(commands, [])
+|> Enum.sort_by(fn {path, _size} -> length(path) end)
+|> Enum.map(fn {k, v} -> {Enum.reverse(k), v} end)
+|> FS.calc_sizes()
+|> then(fn list ->
+  {_, s} = hd(list)
+
+  space = 30_000_000 - (70_000_000 - s)
+
+  Enum.reject(list, fn {_, s} -> s < space end)
+end)
+|> Enum.min_by(&elem(&1, 1))
+|> elem(1)
+```
