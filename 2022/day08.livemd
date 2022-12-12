@@ -1,0 +1,127 @@
+# Day 8: Treetop Tree House
+
+```elixir
+Mix.install([:kino, :nx])
+```
+
+## Section
+
+```elixir
+input = Kino.Input.textarea("input")
+```
+
+```elixir
+input2 = Kino.Input.textarea("example input")
+```
+
+```elixir
+grid =
+  input
+  |> Kino.Input.read()
+  |> String.split("\n")
+  |> Enum.map(fn line ->
+    line
+    |> String.graphemes()
+    |> Enum.map(&String.to_integer/1)
+  end)
+
+defmodule Forest do
+  def visible_trees(forest, height \\ -1)
+  def visible_trees([], _), do: []
+
+  def visible_trees([tree | forest], height) when tree > height do
+    [true | visible_trees(forest, tree)]
+  end
+
+  def visible_trees([_tree | forest], height) do
+    [false | visible_trees(forest, height)]
+  end
+
+  def scenic_score([_tree]), do: [0]
+
+  def scenic_score([tree | forest]) do
+    case Enum.split_while(forest, &(&1 < tree)) do
+      {n, []} -> [length(n) | scenic_score(forest)]
+      {n, _} -> [length(n) + 1 | scenic_score(forest)]
+    end
+  end
+end
+
+hvis =
+  Enum.zip(
+    Enum.map(grid, &Forest.visible_trees/1),
+    Enum.map(grid, fn forest ->
+      forest
+      |> Enum.reverse()
+      |> Forest.visible_trees()
+      |> Enum.reverse()
+    end)
+  )
+  |> Enum.map(fn {v1, v2} ->
+    Enum.map(Enum.zip(v1, v2), fn {l, r} -> l or r end)
+  end)
+
+vgrid = Enum.zip_with(grid, & &1)
+
+vvis =
+  Enum.zip(
+    Enum.map(vgrid, &Forest.visible_trees/1),
+    Enum.map(vgrid, fn forest ->
+      forest
+      |> Enum.reverse()
+      |> Forest.visible_trees()
+      |> Enum.reverse()
+    end)
+  )
+  |> Enum.map(fn {v1, v2} ->
+    Enum.map(Enum.zip(v1, v2), fn {l, r} -> l or r end)
+  end)
+  |> Enum.zip_with(& &1)
+
+Enum.zip(vvis, hvis)
+|> Enum.map(fn {v1, v2} ->
+  Enum.map(Enum.zip(v1, v2), fn {l, r} -> l or r end)
+end)
+|> List.flatten()
+|> Enum.count(& &1)
+```
+
+```elixir
+# vscores = vgrid
+# |> Enum.map(&Forest.scenic_score/1)
+# |> Enum.zip_with(& &1)
+
+l_scores = Enum.map(grid, &Forest.scenic_score/1)
+r_scores = Enum.map(grid, fn forest ->
+  forest
+  |> Enum.reverse()
+  |> Forest.scenic_score()
+  |> Enum.reverse()
+end) 
+h_scores = 
+  grid 
+  |> Enum.zip_with(& &1) 
+  |> Enum.map(&Forest.scenic_score/1) 
+  |> Enum.zip_with(& &1)
+ 
+b_scores = 
+  grid 
+  |> Enum.zip_with(& &1) 
+  |> Enum.map(fn forest ->
+    forest
+    |> Enum.reverse()
+    |> Forest.scenic_score()
+    |> Enum.reverse()
+  end)
+  |> Enum.zip_with(& &1)
+
+Nx.tensor(l_scores)
+|> Nx.multiply(Nx.tensor(r_scores))
+|> Nx.multiply(Nx.tensor(h_scores))
+|> Nx.multiply(Nx.tensor(b_scores))
+|> Nx.to_flat_list()
+|> Enum.max()
+
+
+Nx.LinAlg.
+```

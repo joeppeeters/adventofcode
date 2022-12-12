@@ -1,0 +1,99 @@
+# Day 9: Rope Bridge
+
+```elixir
+Mix.install([:kino])
+```
+
+## Section
+
+```elixir
+input = Kino.Input.textarea("Input")
+```
+
+```elixir
+moves =
+  input
+  |> Kino.Input.read()
+  |> String.split("\n")
+  |> Enum.map(fn move ->
+    move
+    |> String.split(" ")
+    |> then(fn [m, d] ->
+      [m, String.to_integer(d)]
+    end)
+  end)
+  |> Stream.transform([], &{apply(List, :duplicate, &1), &2})
+```
+
+```elixir
+defmodule Rope do
+  def new(knots \\ 2) do
+    List.duplicate({0, 0}, knots)
+  end
+
+  def simulate_tail(moves, rope) do
+    Enum.map_reduce(moves, rope, fn direction, rope ->
+      direction
+      |> Rope.move(rope)
+      |> then(fn rope ->
+        {List.last(rope), rope}
+      end)
+    end)
+    |> elem(0)
+  end
+
+  defp move("U", [{x, y} | rope]) do
+    move_tail([{x, y + 1} | rope])
+  end
+
+  defp move("D", [{x, y} | rope]) do
+    move_tail([{x, y - 1} | rope])
+  end
+
+  defp move("L", [{x, y} | rope]) do
+    move_tail([{x - 1, y} | rope])
+  end
+
+  defp move("R", [{x, y} | rope]) do
+    move_tail([{x + 1, y} | rope])
+  end
+
+  defp move_tail([{x0, y0}, {x1, y1} | rope]) when abs(x0 - x1) == 2 and abs(y0 - y1) == 2 do
+    [{x0, y0} | move_tail([{x0 - div(x0 - x1, 2), y0 - div(y0 - y1, 2)} | rope])]
+  end
+
+  defp move_tail([{x0, y}, {x1, y} | rope]) when abs(x0 - x1) == 2 do
+    [{x0, y} | move_tail([{x0 - div(x0 - x1, 2), y} | rope])]
+  end
+
+  defp move_tail([{x0, y0}, {x1, _y1} | rope]) when abs(x0 - x1) == 2 do
+    [{x0, y0} | move_tail([{x0 - div(x0 - x1, 2), y0} | rope])]
+  end
+
+  defp move_tail([{x, y0}, {x, y1} | rope]) when abs(y0 - y1) == 2 do
+    [{x, y0} | move_tail([{x, y0 - div(y0 - y1, 2)} | rope])]
+  end
+
+  defp move_tail([{x0, y0}, {_x1, y1} | rope]) when abs(y0 - y1) == 2 do
+    [{x0, y0} | move_tail([{x0, y0 - div(y0 - y1, 2)} | rope])]
+  end
+
+  defp move_tail(rope), do: rope
+end
+```
+
+## Part 1
+
+```elixir
+Rope.simulate_tail(moves, Rope.new())
+|> Enum.uniq()
+|> Enum.count()
+```
+
+## Part 2
+
+```elixir
+Rope.simulate_tail(moves, Rope.new(10))
+|> Enum.uniq()
+|> Enum.count()
+```

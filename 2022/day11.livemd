@@ -1,0 +1,103 @@
+# Day 11: Monkey in the Middle
+
+```elixir
+Mix.install([:kino])
+```
+
+## Section
+
+```elixir
+input = Kino.Input.textarea("Input")
+```
+
+```elixir
+defmodule Monkey do
+  defstruct [:name, :items, :divider, :test, :op, inspections: 0]
+
+  def receive_item(monkey, item) do
+    Map.update!(monkey, :items, &(&1 ++ [item]))
+  end
+
+  def process_items(monkey, monkeys, worry_factor \\ 1) do
+    divider =
+      monkeys
+      |> Enum.map(fn {_, m} -> m.divider end)
+      |> Enum.product()
+
+    Enum.reduce(monkey.items, monkeys, fn i, monkeys ->
+      monkey.op.(i)
+      |> rem(divider)
+      |> div(worry_factor)
+      |> then(fn i ->
+        Map.update!(monkeys, monkey.test.(i), &receive_item(&1, i))
+      end)
+    end)
+    |> Map.put(monkey.name, %{
+      monkey
+      | items: [],
+        inspections: monkey.inspections + length(monkey.items)
+    })
+  end
+end
+```
+
+```elixir
+monkeys =
+  input
+  |> Kino.Input.read()
+  |> String.split("\n\n")
+  |> Map.new(fn monkey ->
+    [index, items, operation, test, t, f] = String.split(monkey, "\n")
+
+    "Monkey " <> index = index
+    index = index |> String.trim_trailing(":") |> String.to_integer()
+
+    "  Starting items: " <> items = items
+    items = items |> String.split(", ") |> Enum.map(&String.to_integer/1)
+
+    "  Operation: new = " <> fun = operation
+    {op_fun, _} = Code.eval_string("fn old -> #{fun} end")
+
+    "  Test: divisible by " <> divider = test
+    "    If true: throw to monkey " <> t = t
+    "    If false: throw to monkey " <> f = f
+
+    divider = String.to_integer(divider)
+    monkey_t = String.to_integer(t)
+    monkey_f = String.to_integer(f)
+
+    test_fun = &if(rem(&1, divider) == 0, do: monkey_t, else: monkey_f)
+
+    {index, %Monkey{name: index, items: items, divider: divider, op: op_fun, test: test_fun}}
+  end)
+
+n = Enum.count(monkeys)
+```
+
+## Part 1
+
+```elixir
+Enum.reduce(1..20, monkeys, fn _r, monkeys ->
+  Enum.reduce(0..(n - 1), monkeys, fn i, monkeys ->
+    Monkey.process_items(monkeys[i], monkeys, 3)
+  end)
+end)
+|> Enum.map(fn {_, m} -> m.inspections end)
+|> Enum.sort(:desc)
+|> Enum.take(2)
+|> Enum.product()
+```
+
+## Part 2
+
+```elixir
+Enum.reduce(1..10000, monkeys, fn _r, monkeys ->
+  Enum.reduce(0..(n - 1), monkeys, fn i, monkeys ->
+    Monkey.process_items(monkeys[i], monkeys)
+  end)
+end)
+|> Enum.map(fn {_, m} -> m.inspections end)
+|> Enum.sort(:desc)
+|> Enum.take(2)
+|> Enum.product()
+```

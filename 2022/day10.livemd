@@ -1,0 +1,65 @@
+# Day 10: Cathode-Ray Tube
+
+```elixir
+Mix.install([:kino])
+```
+
+## Section
+
+```elixir
+input = Kino.Input.textarea("input")
+```
+
+```elixir
+instructions =
+  input
+  |> Kino.Input.read()
+  |> String.split("\n")
+  |> Stream.transform([], fn
+    "addx " <> v, acc ->
+      {[:noop, String.to_integer(v)], acc}
+
+    "noop", acc ->
+      {[:noop], acc}
+  end)
+```
+
+```elixir
+[20, 60, 100, 140, 180, 220]
+|> Enum.map(fn x ->
+  instructions
+  |> Stream.take(x - 1)
+  |> Enum.reduce(1, fn
+    :noop, register ->
+      register
+
+    v, register ->
+      v + register
+  end)
+  |> Kernel.*(x)
+end)
+|> Enum.sum()
+```
+
+```elixir
+instructions
+|> Enum.with_index(fn e, i -> {e, rem(i, 40)} end)
+|> Enum.map_reduce(1, fn
+  {:noop, i}, v ->
+    {i in (v - 1)..(v + 1), v}
+
+  {x, i}, v ->
+    {i in (v - 1)..(v + 1), v + x}
+end)
+|> elem(0)
+|> Enum.chunk_every(40)
+|> Enum.each(fn row ->
+  row
+  |> Enum.map(fn
+    true -> "#"
+    false -> " "
+  end)
+  |> Enum.join()
+  |> IO.puts()
+end)
+```
