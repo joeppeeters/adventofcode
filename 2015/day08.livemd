@@ -1,0 +1,32 @@
+# Day 8: Matchsticks
+
+```elixir
+Mix.install([:kino])
+```
+
+## Input
+
+```elixir
+input = Kino.Input.textarea("input (WARNING: gets evaulated!)")
+```
+
+```elixir
+input
+|> Kino.Input.read()
+|> String.split("\n")
+|> Enum.map(fn line ->
+  {eval, _} = Code.eval_string(line)
+  String.length(line) - String.length(eval)
+end)
+|> Enum.sum()
+```
+
+```elixir
+input
+|> Kino.Input.read()
+|> String.split("\n")
+|> Enum.map(fn line ->
+  String.length("#{inspect(line)}") - String.length(line)
+end)
+|> Enum.sum()
+```

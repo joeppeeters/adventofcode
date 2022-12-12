@@ -1,0 +1,114 @@
+# Day 7: Some Assembly Required
+
+```elixir
+Mix.install([:kino, :nimble_parsec])
+```
+
+## Section
+
+```elixir
+input = Kino.Input.textarea("Input")
+```
+
+```elixir
+defmodule Instructions do
+  import NimbleParsec
+
+  signal =
+    choice([
+      ascii_string([?a..?z], min: 1, max: 2),
+      integer(min: 1)
+    ])
+
+  binops =
+    choice([
+      string(" AND ") |> replace(:and),
+      string(" OR ") |> replace(:or),
+      string(" LSHIFT ") |> replace(:lshift),
+      string(" RSHIFT ") |> replace(:rshift)
+    ])
+
+  uop =
+    string("NOT ")
+    |> replace(:not)
+    |> concat(signal)
+
+  bop =
+    signal
+    |> concat(binops)
+    |> concat(signal)
+
+  defparsec(:parse, choice([uop, bop, signal]) |> ignore(string(" -> ")) |> concat(signal))
+end
+
+schema =
+  input
+  |> Kino.Input.read()
+  |> String.split("\n")
+  |> Enum.map(fn line ->
+    {:ok, inst, _, _, _, _} = Parser.instruction(line)
+    inst
+  end)
+  |> Map.new(fn inst ->
+    {inst, [output]} = Enum.split(inst, -1)
+    {output, inst}
+  end)
+```
+
+```elixir
+table = :ets.new(:kb, [:set])
+```
+
+```elixir
+defmodule Emulator do
+  import Bitwise
+
+  def eval(_, signal, _) when is_integer(signal), do: signal
+
+  def eval(schema, signal, table) do
+    if :ets.member(table, signal) do
+      :ets.lookup_element(table, signal, 2)
+    else
+      case schema[signal] do
+        [int] when is_integer(int) ->
+          :ets.insert(table, {signal, int})
+          int
+
+        [val] ->
+          eval(schema, val, table)
+
+        [:not, i] ->
+          bxor(eval(schema, i, table), 0xFFFF)
+          |> tap(fn int -> :ets.insert(table, {signal, int}) end)
+
+        [i1, :or, i2] ->
+          (eval(schema, i1, table) ||| eval(schema, i2, table))
+          |> tap(fn int -> :ets.insert(table, {signal, int}) end)
+
+        [i1, :and, i2] ->
+          (eval(schema, i1, table) &&& eval(schema, i2, table))
+          |> tap(fn int -> :ets.insert(table, {signal, int}) end)
+
+        [i1, :lshift, i2] ->
+          eval(schema, i1, table) <<< eval(schema, i2, table)
+          |> tap(fn int -> :ets.insert(table, {signal, int}) end)
+
+        [i1, :rshift, i2] ->
+          eval(schema, i1, table) >>> eval(schema, i2, table)
+          |> tap(fn int -> :ets.insert(table, {signal, int}) end)
+      end
+    end
+  end
+end
+
+Emulator.eval(schema, "a", table)
+```
+
+```elixir
+table2 = :ets.new(:part2, [:set])
+```
+
+```elixir
+%{schema | "b" => [Emulator.eval(schema, "a", table)]}
+|> Emulator.eval("a", table2)
+```
