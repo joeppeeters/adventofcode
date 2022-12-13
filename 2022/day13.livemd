@@ -1,7 +1,7 @@
 # Day 13: Distress Signal
 
 ```elixir
-Mix.install([:kino])
+Mix.install([:kino, :jason])
 ```
 
 ## Section
@@ -16,8 +16,9 @@ pairs =
   |> Kino.Input.read()
   |> String.split("\n\n")
   |> Enum.map(fn line ->
-    {pair, _} = Code.eval_string("{#{String.replace(line, "\n", ",")}}")
-    pair
+    [left, right] = String.split(line, "\n")
+
+    {Jason.decode!(left), Jason.decode!(right)}
   end)
 ```
 
