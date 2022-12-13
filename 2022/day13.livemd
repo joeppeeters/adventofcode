@@ -51,11 +51,18 @@ end)
 ```
 
 ```elixir
+divider_packets = [
+  [[2]],
+  [[6]]
+]
+
 pairs
 |> Enum.flat_map(fn {left, right} -> [left, right] end)
-|> Enum.concat([[[2]], [[6]]])
+|> Enum.concat(divider_packets)
 |> Enum.sort(Packet)
 |> then(fn ordered ->
-  (Enum.find_index(ordered, &(&1 == [[2]])) + 1) * (Enum.find_index(ordered, &(&1 == [[6]])) + 1)
+  divider_packets
+  |> Enum.map(fn p -> Enum.find_index(ordered, &(&1 == p)) + 1 end)
+  |> Enum.product()
 end)
 ```
