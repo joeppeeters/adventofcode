@@ -1,0 +1,84 @@
+# Day 13: Distress Signal
+
+```elixir
+Mix.install([:kino])
+```
+
+## Section
+
+```elixir
+input = Kino.Input.textarea("input")
+```
+
+```elixir
+pairs =
+  input
+  |> Kino.Input.read()
+  |> String.split("\n\n")
+  |> Enum.map(fn line ->
+    {pair, _} = Code.eval_string("{#{String.replace(line, "\n", ",")}}")
+    pair
+  end)
+```
+
+```elixir
+defmodule Packet do
+  def ordered?([], []), do: true
+  def ordered?([], [_ | _]), do: true
+  def ordered?([_ | _], []), do: false
+
+  def ordered?([x | left], [y | right]) do
+    IO.inspect("Ordering #{inspect(x)} and #{inspect(y)}")
+
+    if ordered?(x, y) do
+      ordered?(left, right)
+    else
+      false
+    end
+  end
+
+  def ordered?(left, right) when is_integer(left) and is_integer(right) do
+    left <= right
+  end
+
+  def ordered?(left, right) when is_integer(left) or is_integer(right) do
+    IO.inspect("Wrapping #{inspect(left)}, #{inspect(right)}")
+    ordered?(List.wrap(left), List.wrap(right))
+  end
+
+  def compare([], []), do: :eq
+  def compare([], [_ | _]), do: :lt
+  def compare([_ | _], []), do: :gt
+
+  def compare([x | left], [y | right]) do
+    case compare(x, y) do
+      :eq -> compare(left, right)
+      neq -> neq
+    end
+  end
+
+  def compare(left, right) when is_list(left), do: compare(left, [right])
+  def compare(left, right) when is_list(right), do: compare([left], right)
+  def compare(left, right) when left == right, do: :eq
+  def compare(left, right) when left < right, do: :lt
+  def compare(left, right) when left > right, do: :gt
+end
+```
+
+```elixir
+pairs
+|> Enum.with_index(1)
+|> Enum.reduce(0, fn {{left, right}, i}, sum ->
+  if Packet.compare(left, right) == :lt, do: sum + i, else: sum
+end)
+```
+
+```elixir
+pairs
+|> Enum.flat_map(fn {left, right} -> [left, right] end)
+|> Enum.concat([[[2]], [[6]]])
+|> Enum.sort(Packet)
+|> then(fn ordered ->
+  (Enum.find_index(ordered, &(&1 == [[2]])) + 1) * (Enum.find_index(ordered, &(&1 == [[6]])) + 1)
+end)
+```
