@@ -23,29 +23,6 @@ pairs =
 
 ```elixir
 defmodule Packet do
-  def ordered?([], []), do: true
-  def ordered?([], [_ | _]), do: true
-  def ordered?([_ | _], []), do: false
-
-  def ordered?([x | left], [y | right]) do
-    IO.inspect("Ordering #{inspect(x)} and #{inspect(y)}")
-
-    if ordered?(x, y) do
-      ordered?(left, right)
-    else
-      false
-    end
-  end
-
-  def ordered?(left, right) when is_integer(left) and is_integer(right) do
-    left <= right
-  end
-
-  def ordered?(left, right) when is_integer(left) or is_integer(right) do
-    IO.inspect("Wrapping #{inspect(left)}, #{inspect(right)}")
-    ordered?(List.wrap(left), List.wrap(right))
-  end
-
   def compare([], []), do: :eq
   def compare([], [_ | _]), do: :lt
   def compare([_ | _], []), do: :gt
