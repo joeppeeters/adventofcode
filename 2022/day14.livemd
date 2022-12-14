@@ -1,0 +1,83 @@
+# Day 14: Regolith Reservoir
+
+```elixir
+Mix.install([:kino])
+```
+
+## Section
+
+```elixir
+input = Kino.Input.textarea("input")
+```
+
+```elixir
+grid =
+  input
+  |> Kino.Input.read()
+  |> String.split("\n")
+  |> Enum.map(fn line ->
+    line
+    |> String.split([" -> ", ","])
+    |> Enum.map(&String.to_integer/1)
+    |> Enum.chunk_every(2)
+    |> Enum.map(&List.to_tuple/1)
+  end)
+  |> Enum.reduce(MapSet.new(), fn line, grid ->
+    line
+    |> Enum.chunk_every(2, 1, :discard)
+    |> Enum.reduce(grid, fn [{x0, y0}, {x1, y1}], grid ->
+      MapSet.union(grid, for(x <- x0..x1, y <- y0..y1, into: MapSet.new(), do: {x, y}))
+    end)
+  end)
+
+bottom = 1 + (grid |> Enum.map(&elem(&1, 1)) |> Enum.max())
+```
+
+```elixir
+defmodule Sand do
+  def drop(grid, bottom, {x, y} \\ {500, 0}) do
+    cond do
+      y == bottom ->
+        {x, y}
+
+      {x, y + 1} not in grid ->
+        drop(grid, bottom, {x, y + 1})
+
+      {x - 1, y + 1} not in grid ->
+        drop(grid, bottom, {x - 1, y + 1})
+
+      {x + 1, y + 1} not in grid ->
+        drop(grid, bottom, {x + 1, y + 1})
+
+      true ->
+        {x, y}
+    end
+  end
+end
+```
+
+```elixir
+Stream.iterate(0, &(&1 + 1))
+|> Enum.reduce_while(grid, fn i, grid ->
+  case Sand.drop(grid, bottom) do
+    {_, ^bottom} ->
+      {:halt, i}
+
+    grain ->
+      {:cont, MapSet.put(grid, grain)}
+  end
+end)
+```
+
+```elixir
+Stream.iterate(0, &(&1 + 1))
+|> Enum.reduce_while(grid, fn i, grid ->
+  case Sand.drop(grid, bottom) do
+    {500, 0} ->
+      {:halt, i + 1}
+
+    grain ->
+      {:cont, MapSet.put(grid, grain)}
+  end
+end)
+```
