@@ -1,0 +1,94 @@
+# Day 15: Beacon Exclusion Zone
+
+```elixir
+Mix.install([:kino])
+```
+
+## Section
+
+```elixir
+input = Kino.Input.textarea("Input")
+```
+
+```elixir
+sensors =
+  input
+  |> Kino.Input.read()
+  |> String.split(["Sensor at x=", ", y=", ": closest beacon is at x=", "\n"], trim: true)
+  |> Enum.map(&String.to_integer/1)
+  |> Enum.chunk_every(2)
+  |> Enum.chunk_every(2)
+  |> Enum.map(fn [x, y] ->
+    {List.to_tuple(x), List.to_tuple(y)}
+  end)
+```
+
+```elixir
+defmodule Signal do
+  def manhattan({x0, y0}, {x1, y1}) do
+    abs(x0 - x1) + abs(y0 - y1)
+  end
+
+  def generate_edge({x, y}, d, range \\ 0..4_000_000, domain \\ 0..4_000_000) do
+    []
+    |> Stream.concat(Stream.map(0..(d - 1), &{x + d - &1, y + &1}))
+    |> Stream.concat(Stream.map(0..(d - 1), &{x - &1, y + d - &1}))
+    |> Stream.concat(Stream.map(0..(d - 1), &{x - d + &1, y - &1}))
+    |> Stream.concat(Stream.map(0..(d - 1), &{x + &1, y - d + &1}))
+    |> Stream.filter(fn {x, y} ->
+      x in range and y in domain
+    end)
+  end
+
+  def scan(sensors) do
+    Enum.find_value(sensors, fn {sensor, d} ->
+      sensor
+      |> generate_edge(d + 1)
+      |> Enum.find(fn coords ->
+        not Enum.any?(sensors, fn {pos, d} ->
+          manhattan(pos, coords) < d
+        end)
+      end)
+    end)
+  end
+
+  def merge(r, []), do: [r]
+
+  def merge(r, ranges) do
+    case Enum.split_with(ranges, &Range.disjoint?(&1, r)) do
+      {disjoint, []} ->
+        [r | disjoint]
+
+      {disjoint, joint} ->
+        [r | joint]
+        |> Enum.flat_map(fn first..last -> [first, last] end)
+        |> Enum.min_max()
+        |> then(fn {min, max} -> [min..max | disjoint] end)
+    end
+  end
+end
+```
+
+```elixir
+beacons = Enum.count(sensors, fn {_, {_, y}} -> y == 2_000_000 end)
+
+Enum.reduce(sensors, [], fn {{x, y}, beacon}, signals ->
+  case Signal.manhattan({x, y}, beacon) - abs(y - 2_000_000) do
+    d when d < 0 -> signals
+    d -> Signal.merge((x - d)..(x + d), signals)
+  end
+end)
+|> Enum.map(&Range.size/1)
+|> Enum.sum()
+|> Kernel.-(beacons)
+```
+
+```elixir
+Enum.map(sensors, fn {sensor, beacon} ->
+  {sensor, Signal.manhattan(sensor, beacon)}
+end)
+|> Signal.scan()
+|> then(fn {x, y} ->
+  x * 4_000_000 + y
+end)
+```
