@@ -1,0 +1,82 @@
+# Day 1
+
+```elixir
+Mix.install([
+  {:kino, "~> 0.11.0"},
+  {:nimble_parsec, "~> 1.4"}
+])
+```
+
+## Section
+
+```elixir
+input = Kino.Input.textarea("Input", monospace: true)
+```
+
+```elixir
+defmodule Trebuchet do
+  def digit_scan(string, scanner \\ &digit_scan/1)
+  def digit_scan("1" <> _rest, _scanner), do: 1
+  def digit_scan("2" <> _rest, _scanner), do: 2
+  def digit_scan("3" <> _rest, _scanner), do: 3
+  def digit_scan("4" <> _rest, _scanner), do: 4
+  def digit_scan("5" <> _rest, _scanner), do: 5
+  def digit_scan("6" <> _rest, _scanner), do: 6
+  def digit_scan("7" <> _rest, _scanner), do: 7
+  def digit_scan("8" <> _rest, _scanner), do: 8
+  def digit_scan("9" <> _rest, _scanner), do: 9
+  def digit_scan(<<_::binary-size(1)>> <> rest, scanner), do: scanner.(rest)
+
+  def forward_scan("one" <> _rest), do: 1
+  def forward_scan("two" <> _rest), do: 2
+  def forward_scan("three" <> _rest), do: 3
+  def forward_scan("four" <> _rest), do: 4
+  def forward_scan("five" <> _rest), do: 5
+  def forward_scan("six" <> _rest), do: 6
+  def forward_scan("seven" <> _rest), do: 7
+  def forward_scan("eight" <> _rest), do: 8
+  def forward_scan("nine" <> _rest), do: 9
+  def forward_scan(string), do: digit_scan(string, &forward_scan/1)
+
+  def reverse_scan("eno" <> _rest), do: 1
+  def reverse_scan("owt" <> _rest), do: 2
+  def reverse_scan("eerht" <> _rest), do: 3
+  def reverse_scan("ruof" <> _rest), do: 4
+  def reverse_scan("evif" <> _rest), do: 5
+  def reverse_scan("xis" <> _rest), do: 6
+  def reverse_scan("neves" <> _rest), do: 7
+  def reverse_scan("thgie" <> _rest), do: 8
+  def reverse_scan("enin" <> _rest), do: 9
+  def reverse_scan(string), do: digit_scan(string, &reverse_scan/1)
+end
+```
+
+## P1
+
+```elixir
+input
+|> Kino.Input.read()
+|> String.split()
+|> Enum.map(fn calibration_value ->
+  Integer.undigits([
+    Trebuchet.digit_scan(calibration_value),
+    Trebuchet.digit_scan(String.reverse(calibration_value))
+  ])
+end)
+|> Enum.sum()
+```
+
+## P2
+
+```elixir
+input
+|> Kino.Input.read()
+|> String.split()
+|> Enum.map(fn calibration_value ->
+  Integer.undigits([
+    Trebuchet.forward_scan(calibration_value),
+    Trebuchet.reverse_scan(String.reverse(calibration_value))
+  ])
+end)
+|> Enum.sum()
+```

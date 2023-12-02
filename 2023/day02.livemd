@@ -1,0 +1,51 @@
+# Day 2
+
+```elixir
+Mix.install([
+  {:kino, "~> 0.11.0"}
+])
+```
+
+## Section
+
+```elixir
+input = Kino.Input.textarea("Input")
+```
+
+```elixir
+parsed =
+  input
+  |> Kino.Input.read()
+  |> String.split("\n")
+  |> Enum.map(&String.split(&1, [":", ";", ",", " "], trim: true))
+  |> Enum.map(fn ["Game", index | sets] ->
+    sets
+    |> Enum.chunk_every(2)
+    |> Enum.group_by(fn [_, c] -> c end, fn [n, _] -> String.to_integer(n) end)
+    |> Map.new(fn {key, count} -> {key, Enum.max(count)} end)
+    |> Map.put("index", String.to_integer(index))
+  end)
+```
+
+## P1
+
+```elixir
+parsed
+|> Enum.filter(
+  &(Map.get(&1, "red", 0) <= 12 and Map.get(&1, "green", 0) <= 13 and Map.get(&1, "blue", 0) <= 14)
+)
+|> Enum.reduce(0, &(&1["index"] + &2))
+```
+
+## P2
+
+```elixir
+parsed
+|> Enum.map(fn map ->
+  map
+  |> Map.delete("index")
+  |> Map.values()
+  |> Enum.product()
+end)
+|> Enum.sum()
+```
