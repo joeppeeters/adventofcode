@@ -1,0 +1,119 @@
+# Day 3
+
+```elixir
+Mix.install([
+  {:kino, "~> 0.11.0"}
+])
+```
+
+## Section
+
+```elixir
+input = Kino.Input.textarea("Input", monospace: true)
+```
+
+```elixir
+defmodule EngineSchematic do
+  def build_schema(input) do
+    input
+    |> String.codepoints()
+    |> build_schema(0, 0, %{}, %{})
+  end
+
+  defp build_schema([], _, _, parts, symbols) do
+    {parts, Enum.group_by(symbols, &elem(&1, 1), &elem(&1, 0))}
+  end
+
+  defp build_schema([i | _] = input, x, y, parts, symbols) when i in ~w(0 9 8 7 6 5 4 3 2 1) do
+    {part, rest} = Enum.split_while(input, &(&1 in ~w(0 9 8 7 6 5 4 3 2 1)))
+
+    part_length = length(part)
+    part = part |> Enum.map(&String.to_integer/1) |> Integer.undigits()
+
+    build_schema(rest, x, y + part_length, Map.put(parts, {x, y, part_length}, part), symbols)
+  end
+
+  defp build_schema(["\n" | rest], x, _y, parts, symbols) do
+    build_schema(rest, x + 1, 0, parts, symbols)
+  end
+
+  defp build_schema(["." | rest], x, y, parts, symbols) do
+    build_schema(rest, x, y + 1, parts, symbols)
+  end
+
+  defp build_schema([s | rest], x, y, parts, symbols) do
+    build_schema(rest, x, y + 1, parts, Map.put(symbols, {x, y}, s))
+  end
+
+  def part_valid?({{x, y, len}, _}, symbols) do
+    not MapSet.disjoint?(
+      symbols,
+      for y <- (y - 1)..(y + len), reduce: MapSet.new([{x, y - 1}, {x, y + len}]) do
+        set ->
+          set
+          |> MapSet.put({x - 1, y})
+          |> MapSet.put({x + 1, y})
+      end
+    )
+  end
+
+  def flatten_parts(parts) do
+    Enum.reduce(parts, %{}, fn {{x, y, len}, part}, parts ->
+      Map.merge(
+        parts,
+        Map.new(0..(len - 1), &{{x, y + &1}, part})
+      )
+    end)
+  end
+
+  def gear_ratio({x, y}, flatten_parts) do
+    Map.take(flatten_parts, [
+      {x - 1, y + 1},
+      {x, y + 1},
+      {x + 1, y + 1},
+      {x - 1, y},
+      {x + 1, y},
+      {x - 1, y - 1},
+      {x, y - 1},
+      {x + 1, y - 1}
+    ])
+    |> Map.values()
+    |> Enum.uniq()
+    |> then(fn
+      [a, b] -> a * b
+      _ -> 0
+    end)
+  end
+end
+
+{parts, symbols} =
+  input
+  |> Kino.Input.read()
+  |> EngineSchematic.build_schema()
+```
+
+## P1
+
+```elixir
+symbol_positions =
+  symbols
+  |> Map.values()
+  |> List.flatten()
+  |> MapSet.new()
+
+parts
+|> Enum.filter(&EngineSchematic.part_valid?(&1, symbol_positions))
+|> Enum.map(&elem(&1, 1))
+|> Enum.sum()
+```
+
+## P2
+
+```elixir
+parts = EngineSchematic.flatten_parts(parts)
+
+symbols
+|> Map.get("*")
+|> Enum.map(&EngineSchematic.gear_ratio(&1, parts))
+|> Enum.sum()
+```

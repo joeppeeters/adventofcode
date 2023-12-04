@@ -1,0 +1,61 @@
+# Day 4
+
+```elixir
+Mix.install([
+  {:kino, "~> 0.11.0"}
+])
+```
+
+## Section
+
+```elixir
+input = Kino.Input.textarea("Input")
+```
+
+```elixir
+winners =
+  input
+  |> Kino.Input.read()
+  |> String.split("\n")
+  |> Enum.map(fn card ->
+    card
+    |> String.split([": ", "| "])
+    |> then(fn [_game, winning_numbers, my_numbers] ->
+      MapSet.intersection(
+        winning_numbers
+        |> String.split(" ", trim: true)
+        |> Enum.map(&String.to_integer/1)
+        |> MapSet.new(),
+        my_numbers
+        |> String.split(" ", trim: true)
+        |> Enum.map(&String.to_integer/1)
+        |> MapSet.new()
+      )
+    end)
+    |> MapSet.size()
+  end)
+```
+
+```elixir
+Enum.reduce(winners, 0, fn
+  0, sum ->
+    sum
+
+  n, sum ->
+    sum + Integer.pow(2, n - 1)
+end)
+```
+
+```elixir
+winners
+|> Enum.reverse()
+|> Enum.reduce({0, []}, fn n, {sum, duplicates} ->
+  duplicates
+  |> Enum.split(n)
+  |> then(fn {head, tail} ->
+    Enum.concat([[Enum.sum([1 | head])], head, tail])
+  end)
+  |> then(&{sum + hd(&1), &1})
+end)
+|> elem(0)
+```
