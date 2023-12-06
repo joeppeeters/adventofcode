@@ -1,0 +1,46 @@
+# Untitled notebook
+
+```elixir
+Mix.install([
+  {:kino, "~> 0.11.0"}
+])
+```
+
+## Section
+
+```elixir
+input = Kino.Input.textarea("Input")
+```
+
+```elixir
+input
+|> Kino.Input.read()
+|> String.split("\n")
+|> Enum.map(fn line ->
+  line
+  |> String.split(" ", trim: true)
+  |> Enum.drop(1)
+  |> Enum.map(&String.to_integer/1)
+end)
+|> Enum.zip()
+|> Enum.map(fn {t, d} ->
+  t + 1 - 2 * ceil((t - :math.sqrt(:math.pow(t, 2) - 4 * d)) / 2)
+end)
+|> Enum.product()
+```
+
+```elixir
+input
+|> Kino.Input.read()
+|> String.split("\n")
+|> Enum.map(fn line ->
+  line
+  |> String.split(" ", trim: true)
+  |> Enum.drop(1)
+  |> Enum.join()
+  |> String.to_integer()
+end)
+|> then(fn [t, d] ->
+  t + 1 - 2 * ceil((t - :math.sqrt(:math.pow(t, 2) - 4 * d)) / 2)
+end)
+```
