@@ -104,7 +104,7 @@ input
       end)
     end)
   end)
+  |> Enum.min()
 end)
-|> Enum.map(&Enum.min/1)
 |> Enum.min()
 ```
