@@ -1,0 +1,69 @@
+# Day 8
+
+```elixir
+Mix.install([
+  {:kino, "~> 0.11.0"}
+])
+```
+
+## Section
+
+```elixir
+input = Kino.Input.textarea("input")
+```
+
+```elixir
+defmodule Network do
+  def traverse(instructions, network, start \\ "AAA", stop \\ "ZZZ") do
+    instructions
+    |> stream_instructions()
+    |> Enum.reduce_while({start, 0}, fn instruction, {x, steps} ->
+      if String.starts_with?(x, stop) do
+        {:halt, steps}
+      else
+        {:cont, {elem(network[x], instruction), steps + 1}}
+      end
+    end)
+  end
+
+  defp stream_instructions(instructions) do
+    instructions
+    |> String.replace("L", "0")
+    |> String.replace("R", "1")
+    |> String.split("", trim: true)
+    |> Enum.map(&String.to_integer/1)
+    |> Stream.cycle()
+  end
+
+  def parse(network) do
+    Map.new(network, fn line ->
+      line
+      |> String.split([" = (", ", ", ")"], trim: true)
+      |> Enum.map(&String.reverse/1)
+      |> then(fn [x, l, r] -> {x, {l, r}} end)
+    end)
+  end
+end
+
+{instructions, map} =
+  input
+  |> Kino.Input.read()
+  |> String.split("\n")
+  |> then(fn [inst, _ | map] ->
+    {inst, Network.parse(map)}
+  end)
+```
+
+```elixir
+Network.traverse(instructions, map)
+```
+
+```elixir
+map
+|> Map.keys()
+|> Enum.filter(&match?("A" <> _, &1))
+|> Enum.map(&Network.traverse(instructions, map, &1, "Z"))
+|> then(fn [n | ns] ->
+  Enum.reduce(ns, n, &div(&1 * &2, Integer.gcd(&1, &2)))
+end)
+```
