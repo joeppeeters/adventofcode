@@ -13,9 +13,6 @@ input = Kino.Input.textarea("input")
 ```
 
 ```elixir
-input =
-  input
-
 defmodule OASIS do
   def extrapolate([0]), do: 0
 
