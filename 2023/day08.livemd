@@ -63,7 +63,5 @@ map
 |> Map.keys()
 |> Enum.filter(&match?("A" <> _, &1))
 |> Enum.map(&Network.traverse(instructions, map, &1, "Z"))
-|> then(fn [n | ns] ->
-  Enum.reduce(ns, n, &div(&1 * &2, Integer.gcd(&1, &2)))
-end)
+|> Enum.reduce(1, &div(&1 * &2, Integer.gcd(&1, &2)))
 ```

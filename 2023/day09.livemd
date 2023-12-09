@@ -1,0 +1,68 @@
+# Day 9
+
+```elixir
+Mix.install([
+  {:kino, "~> 0.11.0"}
+])
+```
+
+## Section
+
+```elixir
+input = Kino.Input.textarea("input")
+```
+
+```elixir
+input
+|> Kino.Input.read()
+|> String.split("\n")
+|> Enum.map(fn line ->
+  line
+  |> String.split(" ", trim: true)
+  |> Enum.map(&String.to_integer/1)
+  |> Enum.reverse()
+  |> then(fn line ->
+    Stream.cycle([0])
+    |> Enum.reduce_while([line], fn _, [line | _] = acc ->
+      line
+      |> Enum.chunk_every(2, 1, :discard)
+      |> Enum.map(fn [l, r] -> r - l end)
+      |> then(fn line ->
+        if Enum.all?(line, &(&1 == 0)), do: {:halt, [line | acc]}, else: {:cont, [line | acc]}
+      end)
+    end)
+    |> Enum.drop(1)
+    |> Enum.reduce(0, fn [n | _], s ->
+      n - s
+    end)
+  end)
+end)
+|> Enum.sum()
+```
+
+```elixir
+input
+|> Kino.Input.read()
+|> String.split("\n")
+|> Enum.map(fn line ->
+  line
+  |> String.split(" ", trim: true)
+  |> Enum.map(&String.to_integer/1)
+  |> then(fn line ->
+    Stream.cycle([0])
+    |> Enum.reduce_while([line], fn _, [line | _] = acc ->
+      line
+      |> Enum.chunk_every(2, 1, :discard)
+      |> Enum.map(fn [l, r] -> r - l end)
+      |> then(fn line ->
+        if Enum.all?(line, &(&1 == 0)), do: {:halt, [line | acc]}, else: {:cont, [line | acc]}
+      end)
+    end)
+    |> Enum.drop(1)
+    |> Enum.reduce(0, fn [n | _], s ->
+      n - s
+    end)
+  end)
+end)
+|> Enum.sum()
+```
