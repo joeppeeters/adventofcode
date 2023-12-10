@@ -1,0 +1,123 @@
+# Day10
+
+```elixir
+Mix.install([
+  {:kino, "~> 0.11.0"}
+])
+```
+
+## Section
+
+```elixir
+input = Kino.Input.textarea("Input", monospace: true)
+```
+
+```elixir
+map =
+  input
+  |> Kino.Input.read()
+  |> String.split("\n")
+  |> Enum.with_index()
+  |> Enum.flat_map(fn {xs, y} ->
+    xs
+    |> String.split("", trim: true)
+    |> Enum.with_index()
+    |> Enum.map(fn {v, x} -> {{x, y}, v} end)
+  end)
+  |> Enum.reject(&match?({_, "."}, &1))
+  |> Map.new()
+
+defmodule Pipes do
+  def walk(map) do
+    map
+    |> Enum.find_value(fn {start, v} -> v == "S" && start end)
+    |> then(fn start ->
+      walk(
+        map,
+        start,
+        Enum.find([N, E, S, W], fn
+          N -> map[next(start, N)] in ~w(| F 7)
+          E -> map[next(start, E)] in ~w(J - 7)
+          S -> map[next(start, S)] in ~w(| L J)
+          W -> map[next(start, W)] in ~w(- F L)
+        end),
+        []
+      )
+    end)
+  end
+
+  def walk(map, pos, dir, path) do
+    case {map[next(pos, dir)], dir} do
+      {"S", dir} ->
+        [next(pos, dir), pos | path]
+
+      {"J", S} ->
+        walk(map, next(pos, dir), W, [pos | path])
+
+      {"J", E} ->
+        walk(map, next(pos, dir), N, [pos | path])
+
+      {"|", N} ->
+        walk(map, next(pos, dir), N, [pos | path])
+
+      {"|", S} ->
+        walk(map, next(pos, dir), S, [pos | path])
+
+      {"-", E} ->
+        walk(map, next(pos, dir), E, [pos | path])
+
+      {"-", W} ->
+        walk(map, next(pos, dir), W, [pos | path])
+
+      {"F", N} ->
+        walk(map, next(pos, dir), E, [pos | path])
+
+      {"F", W} ->
+        walk(map, next(pos, dir), S, [pos | path])
+
+      {"7", N} ->
+        walk(map, next(pos, dir), W, [pos | path])
+
+      {"7", E} ->
+        walk(map, next(pos, dir), S, [pos | path])
+
+      {"L", S} ->
+        walk(map, next(pos, dir), E, [pos | path])
+
+      {"L", W} ->
+        walk(map, next(pos, dir), N, [pos | path])
+    end
+  end
+
+  defp next({x, y}, N), do: {x, y - 1}
+  defp next({x, y}, E), do: {x + 1, y}
+  defp next({x, y}, S), do: {x, y + 1}
+  defp next({x, y}, W), do: {x - 1, y}
+end
+```
+
+```elixir
+walk = Pipes.walk(map)
+
+size =
+  walk
+  |> Enum.uniq()
+  |> Enum.count()
+  |> div(2)
+```
+
+```elixir
+walk
+|> then(fn walk -> [List.last(walk) | walk] end)
+|> Enum.filter(fn pos -> map[pos] in ~w(7 L F J S) end)
+|> Enum.chunk_every(2, 1, :discard)
+|> Enum.map(fn
+  [{x1, y1}, {x2, y2}] ->
+    (x1 - x2) * (y1 + y2)
+end)
+|> Enum.sum()
+|> abs()
+|> IO.inspect()
+|> div(2)
+|> then(fn n -> n - size + 1 end)
+```
