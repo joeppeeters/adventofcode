@@ -112,12 +112,13 @@ walk
 |> Enum.filter(fn pos -> map[pos] in ~w(7 L F J S) end)
 |> Enum.chunk_every(2, 1, :discard)
 |> Enum.map(fn
-  [{x1, y1}, {x2, y2}] ->
-    (x1 - x2) * (y1 + y2)
+  [{x1, y}, {x2, y}] ->
+    y * (x1 - x2)
+
+  _ ->
+    0
 end)
 |> Enum.sum()
 |> abs()
-|> IO.inspect()
-|> div(2)
 |> then(fn n -> n - size + 1 end)
 ```

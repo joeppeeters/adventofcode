@@ -1,0 +1,87 @@
+# Day 11
+
+```elixir
+Mix.install([
+  {:kino, "~> 0.11.0"}
+])
+```
+
+## Section
+
+```elixir
+input = Kino.Input.textarea("Input", monospace: true)
+```
+
+```elixir
+defmodule Constellation do
+  def parse(input) do
+    input
+    |> String.split("\n")
+    |> Enum.with_index()
+    |> Enum.reduce(MapSet.new(), fn {line, y}, galaxies ->
+      line
+      |> String.graphemes()
+      |> Enum.with_index()
+      |> Enum.reduce(galaxies, fn
+        {"#", x}, galaxies -> MapSet.put(galaxies, {x, y})
+        {_, _}, galaxies -> galaxies
+      end)
+    end)
+  end
+
+  def distance(constellation) do
+    constellation
+    |> Enum.reduce({0, Enum.to_list(constellation)}, fn {x1, y1}, {dist, [_ | galaxies]} ->
+      {Enum.reduce(galaxies, dist, fn {x2, y2}, dist ->
+         dist + abs(x1 - x2) + abs(y1 - y2)
+       end), galaxies}
+    end)
+    |> elem(0)
+  end
+
+  def expand(constellation, factor \\ 0) do
+    constellation
+    |> expand_over(0, factor)
+    |> expand_over(1, factor)
+  end
+
+  defp expand_over(constellation, dim, factor) do
+    constellation_groups = Enum.group_by(constellation, &elem(&1, dim))
+
+    Enum.reduce(0..elem(Enum.max_by(constellation, &elem(&1, dim)), dim), {0, MapSet.new()}, fn i,
+                                                                                                {offset,
+                                                                                                 galaxies} ->
+      case constellation_groups[i] do
+        nil ->
+          {offset + factor + 1, galaxies}
+
+        group ->
+          {offset,
+           MapSet.union(
+             galaxies,
+             MapSet.new(group, fn galaxy ->
+               update_in(galaxy, [Access.elem(dim)], &(&1 + offset))
+             end)
+           )}
+      end
+    end)
+    |> elem(1)
+  end
+end
+```
+
+```elixir
+input
+|> Kino.Input.read()
+|> Constellation.parse()
+|> Constellation.expand()
+|> Constellation.distance()
+```
+
+```elixir
+input
+|> Kino.Input.read()
+|> Constellation.parse()
+|> Constellation.expand(1_000_000)
+|> Constellation.distance()
+```
