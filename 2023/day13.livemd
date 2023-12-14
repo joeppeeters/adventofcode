@@ -1,0 +1,73 @@
+# day13
+
+```elixir
+Mix.install([
+  {:kino, "~> 0.11.0"}
+])
+```
+
+## Section
+
+```elixir
+input = Kino.Input.textarea("Input")
+```
+
+```elixir
+Enum.zip([3, 2, 1], [3, 2])
+```
+
+```elixir
+defmodule Mirrors do
+  def mirror(rocks, smudges, skcor \\ [])
+
+  def mirror([l, r | rocks], smudges, skcor) do
+    if mirror_compare([r | rocks], [l | skcor], smudges) do
+      Enum.count(skcor) + 1
+    else
+      mirror([r | rocks], smudges, [l | skcor])
+    end
+  end
+
+  def mirror(_, _, _), do: 0
+
+  def mirror_compare(rocks, skcor, smudges) do
+    Enum.zip(skcor, rocks)
+    |> Enum.reduce(smudges, fn {r, s}, smudges ->
+      smudges - Enum.count(Enum.zip(r, s), fn {a, b} -> a != b end)
+    end)
+    |> then(fn smudges -> smudges == 0 end)
+  end
+
+  def find_mirror(rocks, smudges \\ 0) do
+    mirror = mirror(Enum.zip_with(rocks, &Function.identity/1), smudges)
+
+    if mirror > 0 do
+      mirror
+    else
+      100 * mirror(rocks, smudges)
+    end
+  end
+end
+
+rocks =
+  input
+  |> Kino.Input.read()
+  |> String.split("\n\n")
+  |> Enum.map(fn rocks ->
+    rocks
+    |> String.split("\n", trim: true)
+    |> Enum.map(&String.split(&1, "", trim: true))
+  end)
+```
+
+```elixir
+rocks
+|> Enum.map(&Mirrors.find_mirror/1)
+|> Enum.sum()
+```
+
+```elixir
+rocks
+|> Enum.map(&Mirrors.find_mirror(&1, 1))
+|> Enum.sum()
+```

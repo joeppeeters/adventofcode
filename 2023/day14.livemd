@@ -1,0 +1,161 @@
+# Day14
+
+```elixir
+Mix.install([
+  {:kino, "~> 0.11.0"}
+])
+```
+
+## Section
+
+```elixir
+input = Kino.Input.textarea("Input", monospace: true)
+```
+
+```elixir
+defmodule Reflector do
+  def tilt(map, direction) do
+    map
+    |> sort(direction)
+    |> shift(direction)
+  end
+
+  def cycle(map) do
+    map
+    |> tilt(N)
+    |> tilt(W)
+    |> tilt(S)
+    |> tilt(E)
+  end
+
+  defp shift(map, dir) do
+    Enum.reduce(map, [], fn
+      {_, "#"} = rock, rocks ->
+        [rock | rocks]
+
+      {{x, _y}, "O"}, [] when dir == N ->
+        [{{x, 0}, "O"}]
+
+      {{_x, y}, "O"}, [] when dir == W ->
+        [{{0, y}, "O"}]
+
+      {{x, _y}, "O"}, [] when dir == S ->
+        [{{x, size(map, dir)}, "O"}]
+
+      {{_x, y}, "O"}, [] when dir == E ->
+        [{{size(map, dir), y}, "O"}]
+
+      {{x, _y}, "O"}, [{{x, y}, _} = prev | rocks] when dir == N ->
+        [{{x, y + 1}, "O"}, prev | rocks]
+
+      {{x, _y}, "O"}, [{{x, y}, _} = prev | rocks] when dir == S ->
+        [{{x, y - 1}, "O"}, prev | rocks]
+
+      {{_x, y}, "O"}, [{{x, y}, _} = prev | rocks] when dir == E ->
+        [{{x - 1, y}, "O"}, prev | rocks]
+
+      {{_x, y}, "O"}, [{{x, y}, _} = prev | rocks] when dir == W ->
+        [{{x + 1, y}, "O"}, prev | rocks]
+
+      {{x, _y}, "O"}, [prev | rocks] when dir == N ->
+        [{{x, 0}, "O"}, prev | rocks]
+
+      {{_x, y}, "O"}, [prev | rocks] when dir == W ->
+        [{{0, y}, "O"}, prev | rocks]
+
+      {{x, _y}, "O"}, [prev | rocks] when dir == S ->
+        [{{x, size(map, dir)}, "O"}, prev | rocks]
+
+      {{_x, y}, "O"}, [prev | rocks] when dir == E ->
+        [{{size(map, dir), y}, "O"}, prev | rocks]
+    end)
+  end
+
+  defp size(map, S), do: Enum.max_by(map, fn {{_, y}, _} -> y end) |> elem(0) |> elem(1)
+  defp size(map, E), do: Enum.max_by(map, fn {{x, _}, _} -> x end) |> elem(0) |> elem(0)
+
+  defp sort(map, direction) when direction in [N, S] do
+    Enum.sort(map, dir(direction))
+  end
+
+  defp sort(map, direction) when direction in [E, W] do
+    Enum.sort_by(map, fn {{x, y}, _} -> {y, x} end, dir(direction))
+  end
+
+  defp dir(direction) when direction in [N, W], do: :asc
+  defp dir(direction) when direction in [E, S], do: :desc
+
+  def weight(map, N, y_max) do
+    map
+    |> Enum.reject(fn {_, v} -> v == "#" end)
+    |> Enum.map(&elem(&1, 0))
+    |> Enum.map(&elem(&1, 1))
+    |> Enum.map(&(y_max - &1))
+    |> Enum.sum()
+  end
+
+  def print(map) do
+    tap(map, fn map ->
+      map = Map.new(map)
+
+      IO.puts(
+        for y <- 0..9 do
+          for(x <- 0..9, into: "", do: Map.get(map, {x, y}, ".")) <> "\n"
+        end
+      )
+    end)
+  end
+end
+
+y_max =
+  input
+  |> Kino.Input.read()
+  |> String.split("\n")
+  |> Enum.count()
+
+map =
+  input
+  |> Kino.Input.read()
+  |> String.split("\n")
+  |> Enum.with_index()
+  |> Enum.flat_map(fn {xs, y} ->
+    xs
+    |> String.split("", trim: true)
+    |> Enum.with_index()
+    |> Enum.map(fn {v, x} -> {{x, y}, v} end)
+  end)
+  |> Enum.reject(&match?({_, "."}, &1))
+```
+
+```elixir
+map
+|> Reflector.tilt(N)
+|> Reflector.weight(N, y_max)
+```
+
+```elixir
+Stream.interval(1)
+|> Stream.take(2000)
+|> Enum.reduce_while({map, []}, fn _, {map, maps} ->
+  map
+  |> Reflector.cycle()
+  |> Enum.sort()
+  |> then(fn map ->
+    if map in maps do
+      {:halt, [map | maps]}
+    else
+      {:cont, {map, [map | maps]}}
+    end
+  end)
+end)
+|> then(fn [map | maps] ->
+  maps
+  |> Enum.reverse()
+  |> Enum.split_while(&(&1 != map))
+  |> then(fn {head, tail} ->
+    tail
+    |> Enum.at(rem(1_000_000_000 - Enum.count(head), Enum.count(tail)) - 1)
+    |> Reflector.weight(N, y_max)
+  end)
+end)
+```

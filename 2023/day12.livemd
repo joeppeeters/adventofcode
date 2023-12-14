@@ -1,0 +1,77 @@
+# Day12
+
+```elixir
+Mix.install([
+  {:kino, "~> 0.11.0"},
+  {:memoize, "~>1.4.2"}
+])
+```
+
+## Section
+
+```elixir
+input = Kino.Input.textarea("Input")
+```
+
+```elixir
+defmodule Springs do
+  use Memoize
+
+  defmemo(fit(<<>>, parts) when length(parts) > 0, do: 0)
+
+  defmemo(fit(pattern, []), do: if(String.contains?(pattern, "#"), do: 0, else: 1))
+
+  defmemo(fit(<<?., pattern::binary>>, parts), do: fit(pattern, parts))
+
+  defmemo fit(pattern, [p | parts]) do
+    case pattern do
+      <<?#, _part::binary-size(p - 1), ?#, _pattern::binary>> ->
+        0
+
+      <<??, part::binary-size(p - 1), ?#, pattern::binary>> ->
+        fit(part <> "#" <> pattern, [p | parts])
+
+      <<part::binary-size(p)>> ->
+        if not String.contains?(part, ".") and parts == [], do: 1, else: 0
+
+      <<?#, part::binary-size(p - 1), _next::binary-size(1), pattern::binary>> ->
+        if String.contains?(part, "."), do: 0, else: fit(pattern, parts)
+
+      <<??, part::binary-size(p - 1), next::binary-size(1), pattern::binary>> ->
+        if String.contains?(part, ".") do
+          fit(part <> next <> pattern, [p | parts])
+        else
+          fit(pattern, parts) + fit(part <> next <> pattern, [p | parts])
+        end
+
+      _pattern ->
+        0
+    end
+  end
+end
+```
+
+```elixir
+input
+|> Kino.Input.read()
+|> String.split(["\n", " "])
+|> Enum.chunk_every(2)
+|> Enum.map(fn [pattern, parts] ->
+  {parts, _} = Code.eval_string("[" <> parts <> "]")
+  Springs.fit(pattern, parts)
+end)
+|> Enum.sum()
+```
+
+```elixir
+input
+|> Kino.Input.read()
+|> String.split(["\n", " "])
+|> Enum.chunk_every(2)
+|> Enum.map(fn [pattern, parts] ->
+  pattern = pattern |> List.duplicate(5) |> Enum.join("?")
+  {parts, _} = Code.eval_string("[" <> parts <> "]")
+  Springs.fit(pattern, List.flatten(List.duplicate(parts, 5)))
+end)
+|> Enum.sum()
+```
