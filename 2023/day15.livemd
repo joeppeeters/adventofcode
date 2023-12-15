@@ -1,0 +1,75 @@
+# Day 15
+
+```elixir
+Mix.install([
+  {:kino, "~> 0.11.0"}
+])
+```
+
+## Section
+
+```elixir
+input = Kino.Input.textarea("Input", monospace: true)
+```
+
+```elixir
+defmodule HASH do
+  def box(str) do
+    for <<x::utf8 <- str>>, reduce: 0 do
+      acc ->
+        rem(17 * (acc + x), 256)
+    end
+  end
+end
+
+defmodule HASHMAP do
+  def add(boxes, {label, box, focal_length}) do
+    Map.update(boxes, box, Keyword.new([{label, focal_length}]), fn lenses ->
+      Keyword.update(lenses, label, focal_length, fn _ -> focal_length end)
+    end)
+  end
+
+  def remove(boxes, {label, box}) do
+    Map.update(boxes, box, Keyword.new(), fn lenses ->
+      Keyword.delete(lenses, label)
+    end)
+  end
+
+  def power(boxes) do
+    Enum.flat_map(boxes, fn {box, lenses} ->
+      Enum.with_index(lenses, fn {_label, focal_length}, slot ->
+        (box + 1) * (slot + 1) * focal_length
+      end)
+    end)
+    |> Enum.sum()
+  end
+end
+```
+
+```elixir
+input
+|> Kino.Input.read()
+|> String.splitter(",")
+|> Enum.map(&HASH.box/1)
+|> Enum.sum()
+```
+
+```elixir
+input
+|> Kino.Input.read()
+|> String.split([",", "-"], trim: true)
+|> Enum.map(fn str ->
+  case String.split(str, "=") do
+    [str] -> {String.to_atom(str), HASH.box(str)}
+    [str, focal_length] -> {String.to_atom(str), HASH.box(str), String.to_integer(focal_length)}
+  end
+end)
+|> Enum.reduce(%{}, fn
+  {label, box, focal_length}, boxes ->
+    HASHMAP.add(boxes, {label, box, focal_length})
+
+  {label, box}, boxes ->
+    HASHMAP.remove(boxes, {label, box})
+end)
+|> HASHMAP.power()
+```
