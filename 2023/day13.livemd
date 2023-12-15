@@ -13,10 +13,6 @@ input = Kino.Input.textarea("Input")
 ```
 
 ```elixir
-Enum.zip([3, 2, 1], [3, 2])
-```
-
-```elixir
 defmodule Mirrors do
   def mirror(rocks, smudges, skcor \\ [])
 
