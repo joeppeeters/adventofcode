@@ -1,0 +1,52 @@
+# Day 1: Historian Hysteria
+
+```elixir
+Mix.install([:kino])
+```
+
+## Section
+
+```elixir
+input = Kino.Input.textarea("Input", monospace: true)
+```
+
+```elixir
+{l1, l2} =
+  input
+  |> Kino.Input.read()
+  |> String.split([" ", "\n"], trim: true)
+  |> Enum.map(&String.to_integer/1)
+  |> Enum.chunk_every(2)
+  |> Enum.map(&List.to_tuple/1)
+  |> Enum.unzip()
+```
+
+```elixir
+defmodule LocationID do
+  def distance(l1, l2) do
+    Enum.zip(Enum.sort(l1), Enum.sort(l2))
+    |> Enum.map(fn {a, b} -> abs(a - b) end)
+    |> Enum.sum()
+  end
+
+  def similarity(l1, l2) do
+    f = Enum.frequencies(l2)
+
+    l1
+    |> Enum.map(&similarity_score(&1, f))
+    |> Enum.sum()
+  end
+
+  defp similarity_score(i, f) do
+    i * Map.get(f, i, 0)
+  end
+end
+```
+
+```elixir
+LocationID.distance(l1, l2)
+```
+
+```elixir
+LocationID.similarity(l1, l2)
+```

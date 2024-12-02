@@ -1,0 +1,57 @@
+# Day 2
+
+```elixir
+Mix.install([:kino])
+```
+
+## Section
+
+```elixir
+input = Kino.Input.textarea("Input", monospace: true)
+```
+
+```elixir
+reports =
+  input
+  |> Kino.Input.read()
+  |> String.split("\n", trim: true)
+  |> Enum.map(fn report ->
+    report
+    |> String.split(" ", trim: true)
+    |> Enum.map(&String.to_integer/1)
+  end)
+```
+
+```elixir
+defmodule RedNosedReport do
+  def safe?(report) do
+    monotonic?(report) or
+      monotonic?(Enum.reverse(report))
+  end
+
+  defp monotonic?(report, max \\ 4) do
+    report
+    |> Enum.chunk_every(2, 1, :discard)
+    |> Enum.all?(fn [a, b] -> a < b and b - a < max end)
+  end
+end
+
+Enum.count(reports, &RedNosedReport.safe?/1)
+```
+
+```elixir
+defmodule ProblemDampener do
+  def safe?(left \\ [], right)
+
+  def safe?(left, [r | right]), do:
+    RedNosedReport.safe?(left ++ right) or
+      safe?(left ++ [r], right)
+  end
+
+  def safe?(report, []) do
+    RedNosedReport.safe?(report)
+  end
+end
+
+Enum.count(reports, &ProblemDampener.safe?/1)
+```
