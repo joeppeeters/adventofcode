@@ -1,0 +1,55 @@
+# Day 3: Mull It Over
+
+```elixir
+Mix.install([:kino, :nimble_parsec])
+```
+
+## Section
+
+```elixir
+input = Kino.Input.text("Input", monospaced: true)
+```
+
+```elixir
+defmodule Instructions do
+  import NimbleParsec
+
+  number = integer(min: 1, max: 3)
+
+  op_mult =
+    ignore(string("mul("))
+    |> concat(number)
+    |> ignore(string(","))
+    |> concat(number)
+    |> ignore(string(")"))
+    |> tag(:mul)
+
+  op_do = ignore(string("do()")) |> tag(:do)
+
+  op_dont = ignore(string("don't()")) |> tag(:dont)
+
+  defparsec(
+    :parser,
+    eventually(choice([op_do, op_dont, op_mult]))
+    |> repeat()
+  )
+end
+
+input = Kino.Input.read(input) |> Instructions.parser() |> elem(1)
+```
+
+```elixir
+Enum.reduce(input, 0, fn
+  {:mul, [l, r]}, acc -> acc + l * r
+  _, acc -> acc
+end)
+```
+
+```elixir
+Enum.reduce(input, 0, fn
+  {:mul, [l, r]}, acc when acc >= 0 -> acc + l * r
+  {:dont, []}, acc when acc >= 0 -> -1 * acc
+  {:do, []}, acc -> abs(acc)
+  _, acc -> acc
+end)
+```
