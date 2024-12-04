@@ -1,0 +1,144 @@
+# Day 4: Ceres Search
+
+```elixir
+Mix.install([:kino])
+```
+
+## Section
+
+```elixir
+input = Kino.Input.textarea("Input", monospace: true)
+```
+
+```elixir
+defmodule WordSearch do
+  def count_h(grid) do
+    Enum.reduce(grid, 0, fn row, count ->
+      (row
+       |> Enum.chunk_every(4, 1, :discard)
+       |> Enum.count(fn
+         ["X", "M", "A", "S"] -> true
+         ["S", "A", "M", "X"] -> true
+         _ -> false
+       end)) + count
+    end)
+  end
+
+  def count_v(grid) do
+    grid
+    |> Enum.zip_with(& &1)
+    |> count_h()
+  end
+
+  def count_d(grid) do
+    grid
+    |> Enum.chunk_every(4, 1, :discard)
+    |> Enum.reduce(0, fn row, count ->
+      row
+      |> Enum.zip_with(& &1)
+      |> Enum.chunk_every(4, 1, :discard)
+      |> then(fn grid ->
+        count +
+          Enum.count(grid, fn
+            [
+              ["X", _, _, _],
+              [_, "M", _, _],
+              [_, _, "A", _],
+              [_, _, _, "S"]
+            ] ->
+              true
+
+            [
+              ["S", _, _, _],
+              [_, "A", _, _],
+              [_, _, "M", _],
+              [_, _, _, "X"]
+            ] ->
+              true
+
+            _ ->
+              false
+          end) +
+          Enum.count(grid, fn
+            [
+              [_, _, _, "S"],
+              [_, _, "A", _],
+              [_, "M", _, _],
+              ["X", _, _, _]
+            ] ->
+              true
+
+            [
+              [_, _, _, "X"],
+              [_, _, "M", _],
+              [_, "A", _, _],
+              ["S", _, _, _]
+            ] ->
+              true
+
+            _ ->
+              false
+          end)
+      end)
+    end)
+  end
+
+  def count_x(grid) do
+    grid
+    |> Enum.chunk_every(3, 1, :discard)
+    |> Enum.reduce(0, fn row, count ->
+      (row
+       |> Enum.zip_with(& &1)
+       |> Enum.chunk_every(3, 1, :discard)
+       |> Enum.count(fn
+         [
+           ["M", _, "S"],
+           [_, "A", _],
+           ["M", _, "S"]
+         ] ->
+           true
+
+         [
+           ["M", _, "M"],
+           [_, "A", _],
+           ["S", _, "S"]
+         ] ->
+           true
+
+         [
+           ["S", _, "M"],
+           [_, "A", _],
+           ["S", _, "M"]
+         ] ->
+           true
+
+         [
+           ["S", _, "S"],
+           [_, "A", _],
+           ["M", _, "M"]
+         ] ->
+           true
+
+         _ ->
+           false
+       end)) + count
+    end)
+  end
+end
+
+grid =
+  input
+  |> Kino.Input.read()
+  |> String.split()
+  |> Enum.map(&String.graphemes/1)
+```
+
+```elixir
+WordSearch.count_h(grid) +
+  WordSearch.count_v(grid) +
+  WordSearch.count_d(grid)
+```
+
+```elixir
+WordSearch.count_x(grid)
+```
