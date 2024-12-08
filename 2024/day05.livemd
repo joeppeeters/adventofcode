@@ -17,11 +17,7 @@ input = Kino.Input.textarea("Input", monospace: true)
   |> String.split("\n\n")
   |> then(fn [instructions, updates] ->
     {
-      instructions
-      |> String.split(["\n", "|"])
-      |> Enum.map(&String.to_integer/1)
-      |> Enum.chunk_every(2)
-      |> Enum.group_by(&List.first/1, &Enum.at(&1, 1)),
+      instructions,
       updates
       |> String.split()
       |> Enum.map(fn update ->
@@ -35,7 +31,7 @@ input = Kino.Input.textarea("Input", monospace: true)
 
 ```elixir
 Enum.reduce(updates, {0, 0}, fn update, {sorted, unsorted} ->
-  case Enum.sort(update, &(&1 not in Map.get(instructions, &2, []))) do
+  case Enum.sort(update, &(instructions =~ "#{&1}|#{&2}")) do
     ^update ->
       {sorted + Enum.at(update, div(length(update), 2)), unsorted}
 
