@@ -1,0 +1,65 @@
+# Day 7: Bridge Repair
+
+```elixir
+Mix.install([:kino])
+```
+
+## Section
+
+```elixir
+input = Kino.Input.textarea("Input", monospace: true)
+```
+
+```elixir
+calibrations =
+  input
+  |> Kino.Input.read()
+  |> String.split("\n")
+  |> Enum.map(fn equation ->
+    equation
+    |> String.split(":")
+    |> then(fn [target, operants] ->
+      {
+        String.to_integer(target),
+        operants
+        |> String.split(" ", trim: true)
+        |> Enum.map(&String.to_integer/1)
+        |> Enum.reverse()
+      }
+    end)
+  end)
+```
+
+```elixir
+defmodule OperatorFix do
+  def solve([operant], target) do
+    operant == target
+  end
+
+  def solve([operant | ops], target) do
+    (rem(target, operant) == 0 && solve(ops, div(target, operant))) ||
+      (operant < target && solve(ops, target - operant))
+  end
+
+  def solve2([op], target), do: target == op
+
+  def solve2([operant | ops], target) do
+    (rem(target, operant) == 0 && solve2(ops, div(target, operant))) ||
+      (operant < target && solve2(ops, target - operant)) ||
+      (String.ends_with?(to_string(target), to_string(operant)) &&
+         solve2(ops, div(target, Integer.pow(10, length(Integer.digits(operant))))))
+  end
+end
+```
+
+```elixir
+Enum.reduce(calibrations, 0, fn {target, ops}, acc ->
+  if OperatorFix.solve(ops, target), do: acc + target, else: acc
+end)
+```
+
+```elixir
+Enum.reduce(calibrations, 0, fn {target, ops}, acc ->
+  if OperatorFix.solve2(ops, target), do: acc + target, else: acc
+end)
+```

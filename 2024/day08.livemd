@@ -1,0 +1,78 @@
+# Day 8: Resonant Collinearity
+
+```elixir
+Mix.install([:kino])
+```
+
+## Section
+
+```elixir
+input = Kino.Input.textarea("Input", monospace: true)
+```
+
+```elixir
+{{width, height}, antennas} =
+  input
+  |> Kino.Input.read()
+  |> String.split()
+  |> Enum.with_index()
+  |> then(fn rows ->
+    {{String.length(elem(hd(rows), 0)), Enum.count(rows)},
+     Enum.reduce(rows, %{}, fn {row, y}, antennas ->
+       row
+       |> String.graphemes()
+       |> Enum.with_index()
+       |> Enum.reduce(antennas, fn
+         {".", _x}, antennas ->
+           antennas
+
+         {antenna, x}, antennas ->
+           Map.update(antennas, antenna, [{x, y}], &[{x, y} | &1])
+       end)
+     end)
+     |> Map.values()
+     |> Enum.flat_map(fn antennas ->
+       for {x1, y1} = a1 <- antennas,
+           {x2, y2} = a2 when a1 != a2 <- antennas do
+         {x1, y1, x2 - x1, y2 - y1}
+       end
+     end)}
+  end)
+```
+
+```elixir
+defmodule Antenna do
+  @width width
+  @height height
+
+  def antinodes(antenna, dx, dy) do
+    Stream.unfold(antenna, fn
+      {x, y} when x >= 0 and x < @width and y >= 0 and y < @height ->
+        {{x, y}, {x + dx, y + dy}}
+
+      _ ->
+        nil
+    end)
+  end
+end
+```
+
+```elixir
+MapSet.size(
+  for antinode when not is_nil(antinode) <-
+        Enum.map(antennas, fn {x, y, dx, dy} ->
+          Enum.at(Antenna.antinodes({x, y}, dx, dy), 2)
+        end),
+      into: MapSet.new(),
+      do: antinode
+)
+```
+
+```elixir
+MapSet.size(
+  for {x, y, dx, dy} <- antennas,
+      antinode <- Antenna.antinodes({x, y}, dx, dy),
+      into: MapSet.new(),
+      do: antinode
+)
+```

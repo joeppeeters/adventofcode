@@ -1,0 +1,83 @@
+# Day 6: Guard Gallivant
+
+```elixir
+Mix.install([:kino])
+```
+
+## Section
+
+```elixir
+input = Kino.Input.textarea("Input", monospace: true)
+```
+
+```elixir
+{{width, height}, map} =
+  input
+  |> Kino.Input.read()
+  |> String.split("\n")
+  |> Enum.with_index()
+  |> then(fn rows ->
+    {
+      {String.length(elem(hd(rows), 0)), Enum.count(rows)},
+      Enum.reduce(rows, %{}, fn {row, y}, acc ->
+        row
+        |> String.graphemes()
+        |> Enum.with_index()
+        |> Enum.reduce(acc, fn {col, x}, acc ->
+          Map.put(acc, {x, y}, col)
+        end)
+      end)
+    }
+  end)
+
+guard = Enum.find(map, fn {_p, g} -> g == "^" end)
+```
+
+```elixir
+defmodule Guard do
+  def next(guard, map) do
+    case Map.get(map, elem(step(guard), 0)) do
+      nil -> :out_of_bounds
+      "#" -> next(rotate(guard), map)
+      _ -> step(guard)
+    end
+  end
+
+  def step({{x, y}, "^"}), do: {{x, y - 1}, "^"}
+  def step({{x, y}, ">"}), do: {{x + 1, y}, ">"}
+  def step({{x, y}, "v"}), do: {{x, y + 1}, "v"}
+  def step({{x, y}, "<"}), do: {{x - 1, y}, "<"}
+
+  def rotate({p, "^"}), do: {p, ">"}
+  def rotate({p, ">"}), do: {p, "v"}
+  def rotate({p, "v"}), do: {p, "<"}
+  def rotate({p, "<"}), do: {p, "^"}
+
+  def walk(guard, map) do
+    Stream.unfold(guard, fn
+      :out_of_bounds -> nil
+      guard -> {guard, next(guard, map)}
+    end)
+  end
+end
+```
+
+```elixir
+patrol = Guard.walk(guard, map) |> Map.new() |> Map.keys()
+
+Enum.count(patrol)
+```
+
+```elixir
+Enum.count(patrol, fn p ->
+  guard
+  |> Guard.walk(Map.put(map, p, "#"))
+  |> Enum.reduce_while(MapSet.new(), fn guard, path ->
+    if MapSet.member?(path, guard) do
+      {:halt, :loop}
+    else
+      {:cont, MapSet.put(path, guard)}
+    end
+  end) == :loop
+end)
+```
