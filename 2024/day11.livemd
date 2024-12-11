@@ -1,0 +1,66 @@
+# Day 11: Plutonian Pebbles
+
+```elixir
+Mix.install([:kino])
+```
+
+## Section
+
+```elixir
+input = Kino.Input.text("Input", monospace: true)
+```
+
+```elixir
+input =
+  input
+  |> Kino.Input.read()
+  |> String.split()
+  |> Enum.map(&String.to_integer/1)
+  |> Enum.frequencies()
+```
+
+```elixir
+defmodule PlutonianPebble do
+  def blink(%{} = map) do
+    for {n, count} <- map,
+        numbers <- blink(n),
+        reduce: %{} do
+      acc -> Map.update(acc, numbers, count, fn c -> count + c end)
+    end
+  end
+
+  def blink(0), do: [1]
+
+  def blink(n) do
+    case Integer.digits(n) do
+      numbers when rem(length(numbers), 2) == 0 ->
+        numbers
+        |> Enum.split(div(length(numbers), 2))
+        |> then(fn {l, r} ->
+          [Integer.undigits(l), Integer.undigits(r)]
+        end)
+
+      _ ->
+        [n * 2024]
+    end
+  end
+
+  def blinker(input) do
+    Stream.unfold(input, fn n -> {n, PlutonianPebble.blink(n)} end)
+  end
+end
+```
+
+```elixir
+PlutonianPebble.blinker(input)
+|> Enum.at(25)
+|> Map.values()
+|> Enum.sum()
+```
+
+```elixir
+PlutonianPebble.blinker(input)
+|> Enum.at(75)
+|> Map.values()
+|> Enum.sum()
+```

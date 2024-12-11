@@ -1,0 +1,111 @@
+# Day 9: Disk Fragmenter
+
+```elixir
+Mix.install([:kino])
+```
+
+## Section
+
+```elixir
+input = Kino.Input.text("Input", monospace: true)
+```
+
+```elixir
+disk =
+  input
+  |> Kino.Input.read()
+  |> String.to_integer()
+  |> Integer.digits()
+  |> Enum.chunk_every(2, 2, [0])
+  |> Enum.with_index()
+```
+
+```elixir
+defmodule HDD do
+  def fill_free(0, _at, disk) do
+    {0, disk}
+  end
+
+  def fill_free(free, at, [{[size, _free], id} | disk]) when size < free do
+    {used, disk} = fill_free(free - size, at + size, disk)
+    {id * Enum.sum(at..(at + size - 1)) + used, disk}
+  end
+
+  def fill_free(free, at, [{[size, _free], id} | disk]) when size == free do
+    {id * Enum.sum(at..(at + size - 1)), disk}
+  end
+
+  def fill_free(free, at, [{[size, _free], id} | disk]) when size > free do
+    {id * Enum.sum(at..(at + free - 1)), [{[size - free, 0], id} | disk]}
+  end
+
+  def fill_free(_, _, []) do
+    {0, []}
+  end
+
+  def compact(disk, at \\ 0)
+
+  def compact([], _at) do
+    0
+  end
+
+  def compact([{[size, _free], id}], at) do
+    id * Enum.sum(at..(at + size - 1))
+  end
+
+  def compact([{[size, free], id} | disk], at) do
+    {used, disk} = fill_free(free, at + size, Enum.reverse(disk))
+    id * Enum.sum(at..(at + size - 1)) + used + compact(Enum.reverse(disk), at + size + free)
+  end
+
+  def defrag(disk, tail \\ [])
+
+  def defrag([disk], tail), do: [disk | tail]
+
+  def defrag([{block, id} | disk], tail) when id < 0 do
+    defrag(disk, [{block, -id} | tail])
+  end
+
+  def defrag([block | disk], tail) do
+    case move(disk, block) do
+      [] ->
+        defrag(disk, [block | tail])
+
+      [{[file, free], id} | disk] ->
+        defrag([{[file, free + Enum.sum(elem(block, 0))], id} | disk], tail)
+    end
+  end
+
+  def move(disk, block, blocks \\ [])
+
+  def move([{[file, free], id} = b | disk], {[file0, _], i} = block, blocks) when file0 <= free do
+    case move(disk, block, [b | blocks]) do
+      [] ->
+        Enum.reverse(blocks) ++ [{[file0, free - file0], -i}, {[file, 0], id} | disk]
+
+      disk ->
+        disk
+    end
+  end
+
+  def move([block | disk], block0, blocks) do
+    move(disk, block0, [block | blocks])
+  end
+
+  def move([], _block, _blocks), do: []
+end
+```
+
+```elixir
+HDD.compact(disk)
+```
+
+```elixir
+disk
+|> Enum.reverse()
+|> HDD.defrag()
+|> Enum.reduce({0, 0}, fn {[file, free], id}, {score, at} ->
+  {score + id * Enum.sum(at..(at + file - 1)), at + file + free}
+end)
+|> elem(0)
+```

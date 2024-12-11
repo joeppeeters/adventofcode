@@ -1,0 +1,62 @@
+# Day 10: Hoof It
+
+```elixir
+Mix.install([:kino])
+```
+
+## Section
+
+```elixir
+input = Kino.Input.textarea("Input", monospace: true)
+```
+
+```elixir
+map =
+  input
+  |> Kino.Input.read()
+  |> String.split()
+  |> Enum.with_index()
+  |> Enum.reduce(%{}, fn {row, y}, map ->
+    row
+    |> String.graphemes()
+    |> Enum.map(&String.to_integer/1)
+    |> Enum.with_index()
+    |> Enum.reduce(map, fn {col, x}, map ->
+      Map.put(map, {x, y}, col)
+    end)
+  end)
+```
+
+```elixir
+defmodule TopgraphicMap do
+  def trails(map) do
+    map
+    |> Map.filter(fn {_trail_head, height} -> height == 0 end)
+    |> Enum.map(&trails(&1, map))
+  end
+
+  defp trails({{x, y}, 9}, _map), do: [{x, y}]
+
+  defp trails({{x, y}, height}, map) do
+    map
+    |> Map.take([{x + 1, y}, {x - 1, y}, {x, y + 1}, {x, y - 1}])
+    |> Map.filter(&(elem(&1, 1) == height + 1))
+    |> Enum.flat_map(&trails(&1, map))
+  end
+end
+
+trails = TopgraphicMap.trails(map)
+```
+
+```elixir
+trails
+|> Enum.map(&MapSet.new/1)
+|> Enum.map(&MapSet.size/1)
+|> Enum.sum()
+```
+
+```elixir
+trails
+|> Enum.map(&Enum.count/1)
+|> Enum.sum()
+```
