@@ -31,9 +31,9 @@ guard = Enum.find(map, fn {_p, g} -> g == "^" end)
 ```elixir
 defmodule Guard do
   def step(guard, map) do
-    case Map.get(map, elem(forward(guard), 0)) do
+    case Map.get(map, guard |> forward() |> elem(0)) do
       nil -> :out_of_bounds
-      "#" -> step(rotate(guard), map)
+      "#" -> guard |> rotate() |> step(map)
       _ -> forward(guard)
     end
   end
