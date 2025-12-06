@@ -1,0 +1,55 @@
+# Day 1: Secret Entrance
+
+```elixir
+Mix.install([:kino])
+```
+
+## Section
+
+```elixir
+input =
+  Kino.Input.textarea("input", monospace: true)
+```
+
+```elixir
+input
+|> Kino.Input.read()
+|> String.split()
+|> Enum.map(fn
+  "L" <> rotation -> -String.to_integer(rotation)
+  "R" <> rotation -> String.to_integer(rotation)
+end)
+|> Enum.scan(50, fn rotation, dail -> 
+    Integer.mod(dail + rotation, 100)
+end)
+|> Enum.count(&(&1 == 0))
+```
+
+```elixir
+input
+|> Kino.Input.read()
+|> String.split()
+|> Enum.map_reduce(50, fn
+  "L" <> rotation, dial ->
+    rotation
+    |> String.to_integer()
+    |> then(
+      &{
+        div(rem(100 - dial, 100) + &1, 100),
+        Integer.mod(dial - &1, 100)
+      }
+    )
+
+  "R" <> rotation, dial ->
+    rotation
+    |> String.to_integer()
+    |> then(
+      &{
+        div(dial + &1, 100),
+        Integer.mod(dial + &1, 100)
+      }
+    )
+end)
+|> elem(0)
+|> Enum.sum()
+```

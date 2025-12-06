@@ -1,0 +1,60 @@
+# Day 3: Lobby
+
+```elixir
+Mix.install([:kino])
+```
+
+## Section
+
+```elixir
+input = Kino.Input.textarea("Input", monospace: true)
+```
+
+```elixir
+max_jolt = fn joltages, capacity ->
+  joltages
+  |> Enum.split(-capacity)
+  |> then(fn {joltages, battery} ->
+    Enum.map_reduce(battery, Enum.reverse(joltages), fn b, joltages ->
+      Enum.chunk_while(
+        joltages,
+        {[], b},
+        fn
+          j, {js, b} when j >= b ->
+            {:cont, js ++ [b], {[], j}}
+
+          j, {js, b} ->
+            {:cont, {[j | js], b}}
+        end,
+        fn {_js, b} ->
+          {:cont, [b], b}
+        end
+      )
+      |> Enum.flat_map(&Enum.reverse/1)
+      |> List.pop_at(-1)
+    end)
+    |> elem(0)
+    |> Integer.undigits()
+  end)
+end
+```
+
+```elixir
+input
+|> Kino.Input.read()
+|> String.split()
+|> Enum.map(&String.to_integer/1)
+|> Enum.map(&Integer.digits/1)
+|> Enum.map(&max_jolt.(&1, 2))
+|> Enum.sum()
+```
+
+```elixir
+input
+|> Kino.Input.read()
+|> String.split()
+|> Enum.map(&String.to_integer/1)
+|> Enum.map(&Integer.digits/1)
+|> Enum.map(&max_jolt.(&1, 12))
+|> Enum.sum()
+```

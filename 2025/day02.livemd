@@ -1,0 +1,123 @@
+# Day 2: Gift Shop
+
+```elixir
+Mix.install([:kino])
+```
+
+## Section
+
+```elixir
+input = Kino.Input.text("input", monospaced: true)
+```
+
+```elixir
+# n = 211
+
+# digits = floor(:math.log10(n)) + 1
+#   mid = div(digits, 2)
+#   pow = :math.pow(10, digits - mid) |> round()
+
+#   {div(n, pow), rem(n, pow)}
+```
+
+```elixir
+defmodule RepeatingNumbers do
+  def generate(lower, upper) do
+    Enum.flat_map(2..(trunc(:math.log10(upper)) + 1), fn total_len ->
+      1..div(total_len, 2)
+      |> Enum.filter(&(rem(total_len, &1) == 0))
+      |> Enum.flat_map(fn sub_len ->
+        reps = div(total_len, sub_len)
+        start_min = Integer.pow(10, sub_len - 1)
+        start_max = Integer.pow(10, sub_len) - 1
+
+        for start <- start_min..start_max do
+          num =
+            start
+            |> Integer.to_string()
+            |> String.duplicate(reps)
+            |> String.to_integer()
+
+          if num >= lower and num <= upper do
+            num
+          end
+        end
+      end)
+    end)
+    |> Enum.reject(&is_nil/1)
+    |> Enum.uniq()
+  end
+end
+
+input
+|> Kino.Input.read()
+|> String.split(["-", ",", " "], trim: true)
+|> Enum.map(&String.to_integer/1)
+|> Enum.chunk_every(2)
+|> Enum.map(fn [l, r] ->
+  RepeatingNumbers.generate(l, r)
+  |> Enum.sum()
+end)
+|> Enum.sum()
+```
+
+```elixir
+input
+|> Kino.Input.read()
+|> String.split(["-", ",", " "], trim: true)
+|> Enum.map(&String.to_integer/1)
+|> Enum.chunk_every(2)
+|> Enum.sum_by(fn [l, r] -> 
+  Stream.resource(
+    fn -> 1 end,
+    fn n -> {[n * Integer.pow(10, 1 + floor(:math.log10(n))) + n], n + 1} end,
+    fn _ -> :ok end
+  )
+  |> Stream.drop_while(& &1 < l)
+  |> Enum.take_while(& &1 <= r)
+  |> Enum.sum()
+end)
+
+# |> Enum.take(10)
+
+# n = 3
+
+# n * Integer.pow(10, 1 + round(:math.log(n) / :math.log(10))) + n
+```
+
+```elixir
+11
+22
+33
+44
+55
+
+99
+111
+222
+333
+444
+555
+666
+777
+888
+999
+
+1010
+1111
+1212
+...
+
+11111
+22222
+33333
+44444
+55555
+...
+99999
+
+100100
+
+
+
+```

@@ -1,0 +1,62 @@
+# Day 5: Cafeteria
+
+```elixir
+Mix.install([:kino])
+```
+
+## Section
+
+```elixir
+input = Kino.Input.textarea("input", monospace: true)
+```
+
+```elixir
+input
+|> Kino.Input.read()
+|> String.split("\n\n")
+|> then(fn [fresh, ingredients] ->
+  fresh
+  |> String.split(["-", "\n"])
+  |> Enum.map(&String.to_integer/1)
+  |> Enum.chunk_every(2)
+  |> Enum.map(&apply(Range, :new, &1))
+  |> then(fn fresh ->
+    ingredients
+    |> String.split()
+    |> Enum.map(&String.to_integer/1)
+    |> Enum.count(fn ingredient ->
+      Enum.any?(fresh, &(ingredient in &1))
+    end)
+  end)
+end)
+```
+
+```elixir
+input
+|> Kino.Input.read()
+|> String.split("\n\n", parts: 1)
+|> List.first()
+|> String.split(["-", "\n"])
+|> Enum.map(&String.to_integer/1)
+|> Enum.chunk_every(2)
+|> Enum.map(fn [lower, upper] -> Range.new(lower, upper) end)
+|> Enum.sort_by(&Enum.min/1)
+|> Enum.chunk_while(
+  nil,
+  fn
+    range, nil ->
+      {:cont, range}
+
+    lower..upper//_, range_min..range_max//_ when lower <= range_max + 1 ->
+      {:cont, range_min..max(upper, range_max)}
+
+    next_range, range ->
+      {:cont, range, next_range}
+  end,
+  fn range ->
+    {:cont, range, nil}
+  end
+)
+|> Enum.map(&Enum.count/1)
+|> Enum.sum()
+```

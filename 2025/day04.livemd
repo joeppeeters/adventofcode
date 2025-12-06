@@ -1,0 +1,96 @@
+# Day 4: Printing Department
+
+```elixir
+Mix.install([:kino])
+```
+
+## Section
+
+```elixir
+input = Kino.Input.textarea("input", monospace: true)
+```
+
+```elixir
+input
+|> Kino.Input.read()
+|> String.split()
+|> Enum.with_index()
+|> Enum.reduce(MapSet.new(), fn {row, y}, rolls ->
+  row
+  |> String.graphemes()
+  |> Enum.with_index()
+  |> Enum.reduce(rolls, fn
+    {"@", x}, rolls -> MapSet.put(rolls, {x, y})
+    _, rolls -> rolls
+  end)
+end)
+|> then(fn rolls ->
+  Enum.count(rolls, fn {x, y} ->
+    MapSet.size(
+      MapSet.intersection(
+        for dx <- (x - 1)..(x + 1),
+            dy <- (y - 1)..(y + 1),
+            {dx, dy} != {x, y},
+            into: MapSet.new() do
+          {dx, dy}
+        end,
+        rolls
+      )
+    ) < 4
+  end)
+end)
+```
+
+```elixir
+defmodule Mapper do
+  def print(map) do
+    IO.puts(
+      Enum.map_join(0..elem(Enum.max_by(map, &elem(&1, 1)), 1), fn y ->
+        Enum.map_join(0..elem(Enum.max_by(map, &elem(&1, 0)), 0), fn x ->
+          if {x, y} in map, do: "@", else: "."
+        end) <> "\n"
+      end)
+    )
+  end
+end
+```
+
+```elixir
+input
+|> Kino.Input.read()
+|> String.split()
+|> Enum.with_index()
+|> Enum.reduce(MapSet.new(), fn {row, y}, rolls ->
+  row
+  |> String.graphemes()
+  |> Enum.with_index()
+  |> Enum.reduce(rolls, fn
+    {"@", x}, rolls -> MapSet.put(rolls, {x, y})
+    _, rolls -> rolls
+  end)
+end)
+|> Stream.iterate(fn rolls ->
+  MapSet.reject(rolls, fn {x, y} ->
+    MapSet.size(
+      MapSet.intersection(
+        for dx <- (x - 1)..(x + 1),
+            dy <- (y - 1)..(y + 1),
+            {dx, dy} != {x, y},
+            into: MapSet.new() do
+          {dx, dy}
+        end,
+        rolls
+      )
+    ) < 4
+  end)
+end)
+|> Stream.chunk_every(2, 1)
+|> Enum.reduce_while(0, fn
+  [rolls, rolls], count ->
+    Mapper.print(rolls)
+    {:halt, count}
+
+  [prev, next], count ->
+    {:cont, count + MapSet.size(prev) - MapSet.size(next)}
+end)
+```
