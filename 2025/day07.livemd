@@ -1,0 +1,42 @@
+# Day 7: Laboratories
+
+```elixir
+Mix.install([:kino])
+```
+
+## Section
+
+```elixir
+input = Kino.Input.textarea("input", monospace: true)
+```
+
+```elixir
+input
+|> Kino.Input.read()
+|> String.split()
+|> Enum.map(&String.graphemes/1)
+|> then(fn [start | rest] ->
+  {Enum.map(start, fn
+     "S" -> 1
+     _ -> 0
+   end), rest}
+end)
+|> then(fn {beams, reflectors} ->
+  reflectors
+  |> Enum.reduce({beams, 0}, fn reflectors, {beams, reflections} ->    
+    reflectors
+    |> Enum.zip(beams)
+    |> Enum.reduce({[0], reflections}, fn
+      {".", beam}, {[b | beams], reflections} -> {[0, b + beam | beams], reflections}
+      {"^", 0},    {[_ | beams], reflections} -> {[0, 0 | beams], reflections}
+      {"^", beam}, {[_, b | beams], reflections} -> {[beam, 0, b + beam | beams], reflections + 1}
+    end)
+    |> then(fn {beams, reflections} ->
+      {Enum.reverse(beams), reflections}
+    end)
+  end)
+end)
+|> then(fn {beams, reflections} ->
+  {Enum.sum(beams), reflections}
+end)
+```
