@@ -1,0 +1,63 @@
+# Day 9: Movie Theater
+
+```elixir
+Mix.install([:kino])
+```
+
+## Section
+
+```elixir
+input = Kino.Input.textarea("input", monospace: true)
+```
+
+```elixir
+input
+|> Kino.Input.read()
+|> String.split([",", "\n"], trim: true)
+|> Enum.map(&String.to_integer/1)
+|> Enum.chunk_every(2)
+|> Enum.map(&List.to_tuple/1)
+|> then(fn tiles ->
+  for t1 <- tiles,
+      t2 <- tiles,
+      t1 < t2,
+      do: {t1, t2}
+end)
+|> Enum.map(fn {{x1, y1}, {x2, y2}} ->
+  Enum.count(Range.new(x1, x2)) * Enum.count(Range.new(y1, y2))
+end) 
+|> Enum.max()
+```
+
+```elixir
+input
+|> Kino.Input.read()
+|> String.split([",", "\n"], trim: true)
+|> Enum.map(&String.to_integer/1)
+|> Enum.chunk_every(2)
+|> Enum.map(&List.to_tuple/1)
+|> then(fn polygon ->
+  Enum.flat_map_reduce(polygon, tl(polygon) ++ [hd(polygon)], fn {x1, y1}, rectangles ->
+    {
+      Enum.reduce(rectangles, [], fn {x2, y2}, acc ->
+        if not (polygon
+                |> Enum.chunk_every(2, 1, [hd(polygon)])
+                |> Enum.any?(fn
+                  [{x3, y3}, {x4, y4}] ->
+                    max(y3, y4) > min(y1, y2) and
+                    min(y3, y4) < max(y1, y2) and
+                    max(x3, x4) > min(x1, x2) and
+                    min(x3, x4) < max(x1, x2)
+                end)) do
+          [(abs(x2 - x1) + 1) * (abs(y2 - y1) + 1) | acc]
+        else
+          acc
+        end
+      end),
+      tl(rectangles)
+    }
+  end)
+end)
+|> elem(0)
+|> Enum.max()
+```

@@ -1,0 +1,72 @@
+# Day 8: Playground
+
+```elixir
+Mix.install([:kino])
+
+distance = fn {x1, y1, z1}, {x2, y2, z2} ->
+  :math.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2 + (z1 - z2) ** 2)
+end
+```
+
+## Section
+
+
+
+```elixir
+input = Kino.Input.textarea("input", monospace: true)
+```
+
+```elixir
+circuits = 
+  input
+  |> Kino.Input.read()
+  |> String.split(["\n", ","], trim: true)
+  |> Enum.map(&String.to_integer/1)
+  |> Enum.chunk_every(3)
+  |> Enum.map(&List.to_tuple/1)
+  |> then(fn junctions ->
+    for j1 <- junctions,
+        j2 <- junctions,
+        j1 < j2, 
+        do: {MapSet.new([j1, j2]), distance.(j1, j2)}
+  end)
+  |> Enum.sort_by(&elem(&1, 1))
+  |> Enum.map(&elem(&1, 0))
+```
+
+```elixir
+Stream.scan(circuits, [], fn circuit, circuits ->
+  case Enum.split_with(circuits, &MapSet.disjoint?(&1, circuit)) do
+    {disjoint_circuits, []} ->
+      [circuit | disjoint_circuits]
+
+    {disjoint_circuits, joint_circuits} ->
+      [Enum.reduce(joint_circuits, circuit, &MapSet.union/2) | disjoint_circuits]
+  end
+end)
+|> Enum.at(999)
+|> Enum.map(&MapSet.size/1)
+|> Enum.sort(:desc)
+|> Enum.take(3)
+|> Enum.product()
+```
+
+```elixir
+Enum.reduce_while(circuits, [], fn circuit, circuits ->
+  case Enum.split_with(circuits, &MapSet.disjoint?(&1, circuit)) do
+    {disjoint, []} ->
+      [circuit | disjoint]
+
+    {disjoint, joint} ->
+      [Enum.reduce(joint, circuit, &MapSet.union/2) | disjoint]
+  end
+  |> then(fn
+    [%MapSet{map: map}] when map_size(map) == 1000 ->
+      {:halt, circuit}
+
+    circuits ->
+      {:cont, circuits}
+  end)
+end)
+|> Enum.product_by(&elem(&1, 0))
+```
